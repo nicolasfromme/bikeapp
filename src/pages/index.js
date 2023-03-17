@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from '@next/font/google'
-/*import styles from '@/styles/Home.module.css' */
+import styles from '../styles/Home.module.css'
 import { gql } from "@apollo/client";
 import client from "./apollo-client";
 import Button from '@mui/material/Button'
@@ -9,26 +9,21 @@ import Button from '@mui/material/Button'
 const inter = Inter({ subsets: ['latin'] })
 
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   const { data } = await client.query({
     query: gql`
-      query getUsers {
-          id
-          login
-        }
-      
+    {getUsers{id}}
+
     `,
   });
 
   return {
-    props: {
-     data
-    },
- };
+    props : {message: "HI"}
+  }
 }
 
 
-export default function Home() {
+export default function Home( {message}) {
   return (
     <>
       <Head>
@@ -40,6 +35,7 @@ export default function Home() {
       <main className={styles.main}>
         <div className={styles.description}>
           <p>
+            {message}
             Get started by editing&nbsp;
             <code className={styles.code}>src/pages/index.js</code>
           </p>
