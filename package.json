@@ -9,7 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+
     "@apollo/client": "^3.7.10",
+
+    "@auth0/nextjs-auth0": "^2.2.1",
+
     "@emotion/react": "^11.10.6",
     "@emotion/server": "^11.10.0",
     "@emotion/styled": "^11.10.6",
@@ -17,7 +21,11 @@
     "@mui/material": "^5.11.9",
     "@mui/x-date-pickers": "^6.0.0",
     "@next/font": "13.1.6",
+
     "dayjs": "^1.11.7",
+
+    "apollo-server-micro": "^2.26.1",
+
     "eslint": "8.34.0",
     "eslint-config-next": "13.1.6",
     "graphql": "^16.6.0",
