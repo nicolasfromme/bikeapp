@@ -1,7 +1,7 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+/*import { ApolloClient, InMemoryCache } from "@apollo/client";
 
 const corsOptions = {
-    origin: "http://localhost:3000/api/graphql",
+    origin: "localhost:3000/api/graphql",
     credentials: true
   };
 
@@ -10,5 +10,26 @@ const client = new ApolloClient({
     cache: new InMemoryCache(),
     cors: corsOptions
 });
+*/
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+import fetch from 'isomorphic-unfetch';
 
-export default client;
+let apolloClient = null;
+
+function createApolloClient() {
+  return new ApolloClient({
+    ssrMode: typeof window === 'undefined', // set to true for SSR
+    uri: 'http://localhost:4000/graphql', // replace with your backend URI
+    cache: new InMemoryCache(),
+    fetch: fetch,
+  });
+}
+
+export default function initApolloClient() {
+  if (!apolloClient) {
+    apolloClient = createApolloClient();
+  }
+
+  return apolloClient;
+}
+

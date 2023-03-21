@@ -3,27 +3,48 @@ import Image from 'next/image'
 import { Inter } from '@next/font/google'
 import styles from '../styles/Home.module.css'
 import { gql } from "@apollo/client";
-import client from "./apollo-client";
+//import client from "./apollo-client";
 import Button from '@mui/material/Button'
+import ClientOnly from './ClientOnly';
+//import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/react-hooks';
+import initApolloClient from './apollo-client';
 
 const inter = Inter({ subsets: ['latin'] })
 
-
+/*
 export async function getServerSideProps() {
   const { data } = await client.query({
     query: gql`
-    {getUsers{id}}
-
-    `,
+    {
+      getUsers{
+        id
+      }
+    }`,
   });
 
   return {
-    props : {message: "HI"}
+    props : data
   }
 }
+*/
+
 
 
 export default function Home( {message}) {
+  const QUERY = gql`
+{
+  getUsers{
+    id
+  }
+}`
+const client = initApolloClient();
+const { data, loading, error } = useQuery(QUERY, client);
+
+if (loading) {
+  return <div>Loading...</div>;
+}
+
   return (
     <>
       <Head>
@@ -34,6 +55,9 @@ export default function Home( {message}) {
       </Head>
       <main className={styles.main}>
         <div className={styles.description}>
+          <ClientOnly>
+            <p>{{data}}</p>
+          </ClientOnly>
           <p>
             {message}
             Get started by editing&nbsp;
