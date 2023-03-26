@@ -1,6 +1,6 @@
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { gql } from "@apollo/client";
-import client from "../apolloclient";
+import client from "../../../app/apolloclient";
 import { useRouter } from 'next/router';
 
 export default function Router({ role }) {

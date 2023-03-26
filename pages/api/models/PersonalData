@@ -1,0 +1,13 @@
+import { Schema, model, models } from 'mongoose';
+
+const personalDataSchema = new Schema({
+  name: String,
+  email: {
+    type: String,
+    unique: true,
+  },
+});
+
+const PersonalData = models.PersonalData || model('PersonalData', personalDataSchema);
+
+export default PersonalData;

@@ -3,7 +3,7 @@
 import React from 'react';
 import { UserProvider } from '@auth0/nextjs-auth0/client';
 import { ApolloProvider } from "@apollo/client";
-import client from "./apolloclient";
+import client from "../../app/apolloclient";
 
 export default function App({ Component, pageProps }) {
   
