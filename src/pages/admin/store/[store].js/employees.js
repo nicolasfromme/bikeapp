@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { gql } from "@apollo/client";
-import client from "../apolloclient";
+import client from "../../../apolloclient";
 
 export default function Store( { data }) {
     const router = useRouter();
@@ -16,7 +16,7 @@ export default function Store( { data }) {
 }
 
 async function getStaticProps( ) {
-    const { data } = await client.query({
+    const { data, loading } = await client.query({
         query: gql`
         {
         getCustomers{

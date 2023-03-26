@@ -251,6 +251,35 @@ export const resolvers = {
       else {
         return order;
       }
+    },
+    getLoggedInUserRole: async (_, args) => {
+      const rawToken = await fetch("https://dev-jflkkc726n8tokd3.us.auth0.com/oauth/token", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          },
+        body: JSON.stringify({
+          "client_id":"sRYoahQDh16eiTsjmHST2kXULsg7VjTg",
+          "client_secret":"8dnNMLampy5jaGT20vT45ZhzOPNo3NH3z5OxpvolzzbM43TTZAZIRIxGe0cUlZPY",
+          "audience":"https://dev-jflkkc726n8tokd3.us.auth0.com/api/v2/",
+          "grant_type":"client_credentials"
+        })
+      })
+      const token = await rawToken.json()
+     
+      // fetch data with options
+
+      const response = await fetch(`https://dev-jflkkc726n8tokd3.us.auth0.com/api/v2/users/${args.id}/roles`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": "Bearer " + token.access_token,
+        },
+      }
+      
+      );
+      const data = await response.json();
+      return {role: data[0].name};
     }
   },
   Mutation: {

@@ -67,6 +67,10 @@ export const typeDefs = gql`
         price: String
     }
 
+    type loggedInUserRole {
+        role: String
+    }
+
     input BikeStoreInput {
         name: String!
         street: String!
@@ -171,7 +175,8 @@ export const typeDefs = gql`
         getCustomer(id: ID!): Customer!
         getEmployees: [employee]
         getEmployee(id: ID!): employee!
-        getEmpoyeesByStore(storeId: ID!): [employee]
+        getEmployeesByStore(storeId: ID!): [employee]
         getOrders: [Order]
         getOrder(id: ID!): Order!
+        getLoggedInUserRole(id: String!): loggedInUserRole!
     }`

@@ -10,26 +10,11 @@ export default function Home({ users }) {
   return (
     <main >
 
-      <div >
-        {users.map((user) => (
-          <div key={user.id} >
-            <p>
-              {user.id}
-            </p>
-            <p>
-              {user.login}
-            </p>
-            <p>
-              {user.avatar_url}
-            </p>
-          </div>
-        ))}
-      </div>
 
     </main>
   )
 }
-
+/*
 export async function getStaticProps() {
   const { data } = await client.query({
     query: gql`
@@ -49,3 +34,4 @@ export async function getStaticProps() {
     },
   };
 }
+*/
