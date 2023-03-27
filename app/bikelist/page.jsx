@@ -37,31 +37,32 @@ const top100Films = [
 function Location() {
     return (
 
-        <div>
-            <h1>
-                Wähle deine Stadt
-            </h1>
-            <Autocomplete
-                disablePortal
-                id="combo-box-demo"
-                options={top100Films}
-                sx={{ width: 300 }}
-                renderInput={(params) => <TextField {...params} label="Movie" />}
-            />
-            <h1>
-                Wähle deinen Store
-            </h1>
-            <Autocomplete
-                disablePortal
-                id="combo-box-demo"
-                options={top100Films}
-                sx={{ width: 300 }}
-                renderInput={(params) => <TextField {...params} label="Movie" />}
-            />
+        <div >
+            <div className='flex items-center justify-center'>
+                <h1> Wähle deine Stadt </h1>
+                <Autocomplete
+                    disablePortal
+                    id="combo-box-demo"
+                    options={top100Films}
+                    sx={{ width: 300 }}
+                    renderInput={(params) => <TextField {...params} label="Stadt" />}
+                />
 
-            <Button variant="contained" className='mt-10' sx={{ color: pink[500] }} >Weiter</Button>
+                <h1>
+                    Wähle deinen Store
+                </h1>
+                <Autocomplete
+                    disablePortal
+                    id="combo-box-demo"
+                    options={top100Films}
+                    sx={{ width: 300 }}
+                    renderInput={(params) => <TextField {...params} label="Movie" />}
+                />
 
-            <Map/>
+                {/* <Button variant="contained" className='mt-10' sx={{ color: pink[500] }} >Weiter</Button> */}
+
+
+            </div>
         </div>
 
     )
@@ -88,7 +89,7 @@ function Bikeslection() {
                                         height={1000}
                                         style={{ width: "100%", height: "auto", padding: "20px" }}
                                     />
-                                    <Button variant="contained"  sx={{ color: pink[500] }} >Buchen</Button>
+                                    <Button variant="contained" sx={{ color: pink[500] }} >Buchen</Button>
 
                                 </div>
                             </Grid>
