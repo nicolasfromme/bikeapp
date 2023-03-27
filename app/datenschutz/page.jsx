@@ -1,10 +1,11 @@
+"use client"
 import React from "react";
 import Container from '@mui/material/Container';
 
 
-function Datenschutz() {
+export default function Datenschutz() {
     return (
-        <Container fluid>
+        <Container fluid className="text-black">
             <div id="WholeText">
                 <div id="HeaderText">
                     <h1>
@@ -71,5 +72,3 @@ function Datenschutz() {
         </Container>
     );
 }
-
-export default Datenschutz;

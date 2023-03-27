@@ -1,10 +1,10 @@
+"use client"
 import React from "react";
 import Container from '@mui/material/Container';
 
-
-function Impressum() {
+export default function Impressum() {
   return (
-    <Container fluid>
+    <Container fluid className="text-black">
       <div id="WholeText">
         <div id="HeaderText">
           <h1>
@@ -37,5 +37,3 @@ function Impressum() {
     </Container>
   );
 }
-
-export default Impressum;
