@@ -1,6 +1,6 @@
 import { use } from "react"
 import { gql } from "@apollo/client";
-import client from "../apolloclient";
+import { getClient } from "../apolloclient";
 
 export default function About() {
     const data = use(query_stores())
@@ -19,7 +19,8 @@ export default function About() {
 }
 
 async function query_stores() {
-    const { data } = await client.query({
+    const apolloClient = getClient()
+    const { data } = await apolloClient.query({
         query: gql`
             {
                 getBikeStores {

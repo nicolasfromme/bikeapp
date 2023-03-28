@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { gql } from "@apollo/client";
-import client from "../../../../../app/apolloclient";
+import client from "../../../../apolloclient";
 
 export default function Store( { data }) {
     const router = useRouter();
