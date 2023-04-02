@@ -28,38 +28,39 @@ export default function Booking() {
     );
 }
 
-function StoreSelection() {
+function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelectedStore }) {
+    const listOfCities = ["City 1", "City 2", "City 3"];
+    const listOfStores = ["Store 1", "Store 2", "Store 3"];
+    const handleCityChange = (event, value) => {
+        setSelectedCity(value);
+    };
 
-    const listOfCities = [
-        { label: 'Mannheim' },
-    ]
-    const listOfStores = [
-        { label: 'Store 1' },
-    ]
+    const handleStoreChange = (event, value) => {
+        setSelectedStore(value);
+    };
     return (
         <div>
             <div className="flex justify-center items-center mb-10">
                 <div className="block">
-                    <h1>
-                        Wähle deine Stadt
-                    </h1>
+                    <h1>Wähle deine Stadt</h1>
                     <Autocomplete
                         disablePortal
-                        id="combo-box-demo"
+                        id="city-combo-box"
                         options={listOfCities}
+                        value={selectedCity}
+                        onChange={handleCityChange}
                         sx={{ width: 300 }}
                         renderInput={(params) => <TextField {...params} label="Stadt" />}
                     />
                 </div>
                 <div className="block ml-40">
-
-                    <h1>
-                        Wähle deinen Store
-                    </h1>
+                    <h1>Wähle deinen Store</h1>
                     <Autocomplete
                         disablePortal
-                        id="combo-box-demo"
+                        id="store-combo-box"
                         options={listOfStores}
+                        value={selectedStore}
+                        onChange={handleStoreChange}
                         sx={{ width: 300 }}
                         renderInput={(params) => <TextField {...params} label="Store" />}
                     />
@@ -67,21 +68,27 @@ function StoreSelection() {
             </div>
             <div className="flex justify-center items-center">
                 <Map />
-
             </div>
         </div>
     )
 }
-function BikeSelection() {
-    const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
+function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues }) {
 
     const handleAddField = () => {
         setFields([...fields, { id: Date.now(), value: "" }]);
+        setSelectedOptions({ ...selectedOptions, [fields.length]: options[0].value });
+        setInputValues({ ...inputValues, [fields.length]: "" });
     };
 
     const handleDeleteField = (id) => {
         const newFields = fields.filter((field) => field.id !== id);
         setFields(newFields);
+        const newSelectedOptions = { ...selectedOptions };
+        const newInputValues = { ...inputValues };
+        delete newSelectedOptions[id];
+        delete newInputValues[id];
+        setSelectedOptions(newSelectedOptions);
+        setInputValues(newInputValues);
     };
 
     const handleChange = (id, value) => {
@@ -93,6 +100,14 @@ function BikeSelection() {
             }
         });
         setFields(newFields);
+    };
+
+    const handleOptionChange = (id, option) => {
+        setSelectedOptions({ ...selectedOptions, [id]: option });
+    };
+
+    const handleInputChange = (id, input) => {
+        setInputValues({ ...inputValues, [id]: input });
     };
 
     return (
@@ -107,7 +122,13 @@ function BikeSelection() {
                         borderRadius: "10px",
                         boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.1)"
                     }}>
-                        <BikeSelectionItem />
+                        <BikeSelectionItem
+                            id={field.id}
+                            selectedOption={selectedOptions[field.id]}
+                            setSelectedOption={handleOptionChange}
+                            inputValue={inputValues[field.id]}
+                            setInputValue={handleInputChange}
+                        />
                         <Button
                             variant="outlined"
                             color="error"
@@ -126,22 +147,22 @@ function BikeSelection() {
             </Button>
         </Box>
     );
-
-
 }
-function BikeSelectionItem() {
+function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, setInputValue }) {
     const options = [
         { value: "option1", label: "Option 1" },
         { value: "option2", label: "Option 2" },
         { value: "option3", label: "Option 3" },
     ];
-    const [items, setItems] = useState([{ id: 1 }]);
-    const [selectedOption, setSelectedOption] = useState(options[0].value);
 
-    const handleAddItem = () => {
-        const newId = items[items.length - 1].id + 1;
-        setItems([...items, { id: newId }]);
+    const handleOptionChange = (e) => {
+        setSelectedOption(id, e.target.value);
     };
+
+    const handleInputChange = (e) => {
+        setInputValue(id, e.target.value);
+    };
+
     return (
         <div>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -150,12 +171,12 @@ function BikeSelectionItem() {
                 </Box>
                 <Box sx={{ flexGrow: 1 }}>
                     <FormControl sx={{ minWidth: 120 }}>
-                        <InputLabel id="select-option-label">Option</InputLabel>
+                        <InputLabel id={`select-option-label-${id}`}>Option</InputLabel>
                         <Select
-                            labelId="select-option-label"
-                            id="select-option"
+                            labelId={`select-option-label-${id}`}
+                            id={`select-option-${id}`}
                             value={selectedOption}
-                            onChange={(e) => setSelectedOption(e.target.value)}
+                            onChange={handleOptionChange}
                         >
                             {options.map((option) => (
                                 <MenuItem key={option.value} value={option.value}>
@@ -166,9 +187,9 @@ function BikeSelectionItem() {
                     </FormControl>
                 </Box>
                 <Box sx={{ mr: 2 }}>
-                    <TextField label="Number" />
+                    <TextField label="Number" value={inputValue} onChange={handleInputChange} />
                 </Box>
-                <RadioGroup row>
+                {/* <RadioGroup row value="1" onChange={handleRadioChange}>
                     {[1, 2, 3].map((value) => (
                         <FormControlLabel
                             key={value}
@@ -177,11 +198,12 @@ function BikeSelectionItem() {
                             label={`Radio ${value}`}
                         />
                     ))}
-                </RadioGroup>
+                </RadioGroup> */}
             </Box>
         </div>
-    )
+    );
 }
+
 function UserLogin() {
     return (
         <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
@@ -285,14 +307,22 @@ function PaymentPage() {
         </div>
     );
 }
-
 function Content({ activeStep }) {
+
+    const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
+
+    const [selectedCity, setSelectedCity] = useState(null);
+    const [selectedStore, setSelectedStore] = useState(null);
+
+    const [selectedOptions, setSelectedOptions] = useState({});
+    const [inputValues, setInputValues] = useState({});
+
     return (
         <div className="p-10">
             {activeStep == 0 ? (
-                <StoreSelection activeStep={activeStep} className="" />
+                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
             ) : activeStep == 1 ? (
-                <BikeSelection activeStep={activeStep} />
+                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues}/>
             ) : activeStep == 2 ? (
                 <UserLogin activeStep={activeStep} />
             ) : (
@@ -302,7 +332,6 @@ function Content({ activeStep }) {
     )
 
 }
-
 function HorizontalLinearStepper({ activeStep, setActiveStep }) {
     const steps = ['Choose Store', 'Choose Bike', 'User Login', 'Payment'];
 
@@ -413,7 +442,6 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
         </Box>
     );
 }
-
 function Map() {
 
     const libraries = ["places"];

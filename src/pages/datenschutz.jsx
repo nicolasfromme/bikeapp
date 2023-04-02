@@ -11,7 +11,7 @@ function Datenschutz() {
             <center>Datenschutz</center>
           </h1>
         </div>
-        <hr class="rounded" />
+        <hr className="rounded" />
         <br></br>
         <div id="Text">
           <p>Die folgenden Datenschutzhinweise informieren Sie über Art und Umfang der Verarbeitung Ihrer personenbezogenen Daten im Rahmen der Nutzung unseres Onlineshops. Als gesetzliche Grundlage für den Datenschutz dient insbesondere die Datenschutz-Grundverordnung (DSGVO).</p>
