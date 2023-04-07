@@ -5,7 +5,6 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Typography from '@mui/material/Typography';
-import { StepContent } from "@mui/material";
 import Autocomplete from '@mui/material/Autocomplete';
 import { pink } from '@mui/material/colors';
 
@@ -13,6 +12,7 @@ import { Divider, Grid, Box, TextField, Button, Paper, FormControlLabel, Radio, 
 import Image from "next/image";
 import { CreditCard, Payment, MonetizationOn } from "@mui/icons-material";
 
+const libraries = ["places"];
 
 export default function Booking() {
     const [activeStep, setActiveStep] = React.useState(0);
@@ -124,7 +124,7 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
                     }}>
                         <BikeSelectionItem
                             id={field.id}
-                            selectedOption={selectedOptions[field.id]}
+                            selectedOption={selectedOptions[field.id] || 'option1'} // hier wird 'option1' als Default-Wert gesetzt
                             setSelectedOption={handleOptionChange}
                             inputValue={inputValues[field.id]}
                             setInputValue={handleInputChange}
@@ -151,8 +151,7 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
 function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, setInputValue }) {
     const options = [
         { value: "option1", label: "Option 1" },
-        { value: "option2", label: "Option 2" },
-        { value: "option3", label: "Option 3" },
+        { value: "option2", label: "Option 2" }
     ];
 
     const handleOptionChange = (e) => {
@@ -167,7 +166,7 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
         <div>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Box sx={{ mr: 2 }}>
-                    <Image src="/bike_one.png" width={300} height={50} alt="icon" />
+                    <Image src="/bike_one.png" width={300} height={50} alt="" />
                 </Box>
                 <Box sx={{ flexGrow: 1 }}>
                     <FormControl sx={{ minWidth: 120 }}>
@@ -203,55 +202,52 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
         </div>
     );
 }
+function UserLogin(username, setUsername, password, setPassword) {
 
-function UserLogin() {
+    const handleUsernameChange = (event) => {
+        setUsername(event.target.value);
+    };
+
+    const handlePasswordChange = (event) => {
+        setPassword(event.target.value);
+    };
+
+    const handleLoginClick = () => {
+        // handle login button click event
+    };
+
     return (
         <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
             <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                     <Paper elevation={3} sx={{ p: 2 }}>
                         <Box sx={{ mb: 2 }}>
-                            <TextField label="Username" fullWidth />
+                            <TextField
+                                label="Username"
+                                fullWidth
+                                value={username}
+                                onChange={handleUsernameChange}
+                            />
                         </Box>
                         <Box sx={{ mb: 2 }}>
-                            <TextField label="Password" type="password" fullWidth />
+                            <TextField
+                                label="Password"
+                                type="password"
+                                fullWidth
+                                value={password}
+                                onChange={handlePasswordChange}
+                            />
                         </Box>
-                        <Button variant="contained" fullWidth>
+                        <Button variant="contained" fullWidth onClick={handleLoginClick}>
                             Login
                         </Button>
                     </Paper>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                    <Paper elevation={3} sx={{ p: 2 }}>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField label="Name" fullWidth />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField label="Email" type="email" fullWidth />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField label="Phone" fullWidth />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField label="Adresse" fullWidth />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField label="Stadt" fullWidth />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField label="PLZ" fullWidth />
-                        </Box>
-                        <Button variant="contained" fullWidth>
-                            Register
-                        </Button>
-                    </Paper>
-                </Grid>
-                <Divider orientation="vertical" flexItem />
-
             </Grid>
         </Box>
     );
 }
+
 function PaymentPage() {
     return (
         <div>
@@ -307,7 +303,79 @@ function PaymentPage() {
         </div>
     );
 }
-function Content({ activeStep }) {
+// function Content({ activeStep }) {
+
+//     const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
+
+//     const [selectedCity, setSelectedCity] = useState(null);
+//     const [selectedStore, setSelectedStore] = useState(null);
+
+//     const [selectedOptions, setSelectedOptions] = useState({});
+//     const [inputValues, setInputValues] = useState({});
+
+
+//     return (
+//         <div className="p-10">
+//             {activeStep == 0 ? (
+//                 <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
+
+//             ) : activeStep == 1 ? (
+//                 <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
+//             ) : activeStep == 2 ? (
+//                 <UserLogin activeStep={activeStep} />
+//             ) : (
+//                 <PaymentPage />
+//             )}
+//         </div>
+//     )
+
+// }
+
+function addOrderToDB(customerId, bikeId, date, price) {
+    const query = `mutation {
+      addOrder(
+        customer: "${customerId}",
+        bike: "${bikeId}",
+        date: "${date}",
+        price: "${price}"
+      ) {
+        id
+        customer {
+          id
+          name
+        }
+        bike {
+          id
+          model
+        }
+        date
+        price
+      }
+    }`;
+
+    return fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+    }).then((response) => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    }).then((json) => {
+        return json.data.addOrder;
+    }).catch((error) => {
+        console.error('There was a problem adding the order:', error);
+    });
+}
+
+function HorizontalLinearStepper({ activeStep, setActiveStep }) {
+
+
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
     const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
 
@@ -317,22 +385,6 @@ function Content({ activeStep }) {
     const [selectedOptions, setSelectedOptions] = useState({});
     const [inputValues, setInputValues] = useState({});
 
-    return (
-        <div className="p-10">
-            {activeStep == 0 ? (
-                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
-            ) : activeStep == 1 ? (
-                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues}/>
-            ) : activeStep == 2 ? (
-                <UserLogin activeStep={activeStep} />
-            ) : (
-                <PaymentPage />
-            )}
-        </div>
-    )
-
-}
-function HorizontalLinearStepper({ activeStep, setActiveStep }) {
     const steps = ['Choose Store', 'Choose Bike', 'User Login', 'Payment'];
 
     const [skipped, setSkipped] = React.useState(new Set());
@@ -354,6 +406,12 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
 
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
         setSkipped(newSkipped);
+
+        if (activeStep === steps.length - 1) {
+            console.log("PUSH")
+            addOrderToDB("username", "fields"," new Date()", "1234")
+        }
+
     };
 
     const handleBack = () => {
@@ -396,8 +454,7 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                     return (
                         <Step key={label} {...stepProps}>
                             <StepLabel {...labelProps}>{label}</StepLabel>
-                            <StepContent>
-                            </StepContent>
+
                         </Step>
                     );
                 })}
@@ -405,7 +462,19 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
             {activeStep === steps.length ? (
                 <React.Fragment>
                     <Typography sx={{ mt: 0, mb: 1 }}>
-                        <Content activeStep={activeStep} />
+                        {/* <Content activeStep={activeStep} /> */}
+                        <div className="p-10">
+                            {activeStep == 0 ? (
+                                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
+
+                            ) : activeStep == 1 ? (
+                                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
+                            ) : activeStep == 2 ? (
+                                <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
+                            ) : (
+                                <PaymentPage />
+                            )}
+                        </div>
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                         <Box sx={{ flex: '1 1 auto' }} />
@@ -415,7 +484,18 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
             ) : (
                 <React.Fragment>
                     <Typography >
-                        <Content activeStep={activeStep} />
+                        <div className="p-10">
+                            {activeStep == 0 ? (
+                                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
+
+                            ) : activeStep == 1 ? (
+                                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
+                            ) : activeStep == 2 ? (
+                                <UserLogin activeStep={activeStep} />
+                            ) : (
+                                <PaymentPage />
+                            )}
+                        </div>
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
                         <Button
@@ -443,9 +523,6 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
     );
 }
 function Map() {
-
-    const libraries = ["places"];
-
     const mapContainerStyle = {
         width: "65vw",
         height: "60vh",
@@ -461,34 +538,35 @@ function Map() {
             coordinates: {
                 lat: 49.488888,
                 lng: 8.469167,
-            }
+            },
         },
         {
             name: "b",
             coordinates: {
                 lat: 49.496888,
                 lng: 8.479167,
-            }
+            },
         },
         {
             name: "c",
             coordinates: {
                 lat: 49.483888,
                 lng: 8.479167,
-            }
-        }
-    ]
+            },
+        },
+    ];
     const [marker] = useState(null);
 
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-        libraries,
+        libraries, // Verwenden Sie die libraries Konstante hier
     });
 
+    // Der Rest bleibt gleich
     if (loadError) return "Error loading maps";
     if (!isLoaded) return "Loading Maps";
 
-    const styles = require('./GoogleMapStyles.json')
+    const styles = require("./GoogleMapStyles.json");
     return (
         <GoogleMap
             mapContainerStyle={mapContainerStyle}
@@ -500,10 +578,10 @@ function Map() {
                 keyboardShortcuts: false, // disable keyboard shortcuts
                 scaleControl: true, // allow scale controle
                 scrollwheel: true, // allow scroll wheel
-                styles: styles // change default map styles
+                styles: styles, // change default map styles
             }}
         >
-            {locations.map(location => (
+            {locations.map((location) => (
                 <MarkerF
                     key={location.name}
                     position={location.coordinates}
@@ -515,8 +593,6 @@ function Map() {
                     }}
                 />
             ))}
-
         </GoogleMap>
-
-    )
+    );
 }

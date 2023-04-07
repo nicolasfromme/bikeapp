@@ -1,11 +1,14 @@
 import Bike from '../models/Bike';
-import BikeStore from '../models/BikeStore';
+import BikeStore from '../models/Bikestore';
 import Customer from '../models/Customer';
 import Employee from '../models/Employee';
 import Order from '../models/Order';
 import connectMongo from '../connectMongo';
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 
 export const resolvers = {
+  
   Query: {
     getUsers: async () => {
       await connectMongo()
@@ -236,17 +239,21 @@ export const resolvers = {
       await bike.save();
       return bike;
     },
+    
     addOrder: async (_, args) => {
       await connectMongo();
+      const bikeId = args.input.bike;
+      if (!mongoose.Types.ObjectId.isValid(bikeId)) {
+        throw new Error(`Invalid bike ID: ${bikeId}`);
+      }
       const order = new Order({
-        bike: args.input.bike,
-        customer: args.input.customer,
-        employee: args.input.employee,
+        bike: new ObjectId(bikeId),
+        customer: new ObjectId(args.input.customer),
         date: args.input.date,
         price: args.input.price,
-        status: args.input.status,
       });
       await order.save();
+      // // Convert
       return order;
     }
   }

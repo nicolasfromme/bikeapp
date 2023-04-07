@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.10",
+    "@apollo/client": "^3.7.11",
     "@apollo/react-hooks": "^4.0.0",
     "@auth0/nextjs-auth0": "^2.2.1",
     "@coreui/react": "^4.7.0",
