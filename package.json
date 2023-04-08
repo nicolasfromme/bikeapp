@@ -17,6 +17,7 @@
     "@emotion/styled": "^11.10.6",
     "@mui/icons-material": "^5.11.11",
     "@mui/material": "^5.11.9",
+    "@mui/x-data-grid": "^6.0.4",
     "@mui/x-date-pickers": "^6.0.0",
     "@next/font": "13.1.6",
     "apollo-server-micro": "^2.26.1",

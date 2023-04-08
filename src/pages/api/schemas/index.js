@@ -176,7 +176,7 @@ export const typeDefs = gql`
         getEmployees: [employee]
         getEmployee(id: ID!): employee!
         getEmployeesByStore(storeId: ID!): [employee]
-        getOrders: [Order]
+        getOrders: [Order] 
         getOrder(id: ID!): Order!
         getLoggedInUserRole(id: String!): loggedInUserRole!
     }`

@@ -15,9 +15,23 @@ import SearchIcon from '@mui/icons-material/Search';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Questions from './questions_list'
 
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel';
+import FormControl from "@mui/material/FormControl";
+import { useState } from 'react';
+
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+
+  const [value, setValue] = useState('female');
+
+    const handleChange = (event) => {
+        setValue(event.target.value);
+    };
+
 
   return (
     <main >
@@ -30,6 +44,20 @@ export default function Home() {
         }}>
         <div className='ml-10'>
           <PictureText />
+          <FormControl>
+                    <FormLabel id="demo-radio-buttons-group-label">Gender</FormLabel>
+                    <RadioGroup
+                        aria-labelledby="demo-radio-buttons-group-label"
+                        defaultValue="female"
+                        name="radio-buttons-group"
+                        value={value}
+                        onChange={handleChange}
+                    >
+                        <FormControlLabel value="female" control={<Radio />} label="Female" />
+                        <FormControlLabel value="male" control={<Radio />} label="Male" />
+                        <FormControlLabel value="other" control={<Radio />} label="Other" />
+                    </RadioGroup>
+                </FormControl>
         </div>
       </div>
       <div className='bg-white text-black pt-24 pb-24'>
