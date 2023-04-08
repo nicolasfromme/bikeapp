@@ -3,22 +3,22 @@ import './globals.css'
 import ResponsiveAppBar from './responsive_header'
 import { Box, Grid, Link, Typography } from '@mui/material';
 import { ApolloProvider } from '@apollo/client';
-import client from './apolloclient';
+import { getClient } from './apolloclient';
 export default function RootLayout({ children }) {
 
 
   return (
     <html lang="en">
       <body >
+        <ApolloProvider client={getClient()}>
         <ResponsiveAppBar className='text-black' ></ResponsiveAppBar>
         <Box className='bg-white' sx={{ maxWidth: '2100px', margin: '0 auto' }}>
-        <ApolloProvider client={client}>
 
           {children}
-          </ApolloProvider>
 
           <Footer />
         </Box>
+          </ApolloProvider>
       </body>
     </html>
   )

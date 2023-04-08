@@ -3,6 +3,8 @@ import { useMutation } from '@apollo/client';
 
 import { useQuery, gql } from '@apollo/client';
 
+import { use } from 'react';
+
 // const GET_BIKE_STORES = gql`
 //   query {
 //     getBikeStores {
@@ -12,27 +14,29 @@ import { useQuery, gql } from '@apollo/client';
 //   }
 // `;
 
+// const ADD_ORDER = gql`
+// mutation {
+//   addOrder(input: {
+//     customer: "6430196df543f809796bbb1a",
+//     bike: "6430196df543f809796bbb1a",
+//     date: "2023-03-17T09:00:00.000Z",
+//     price: 500
+//   }) {
+//     customer
+//     bike
+//     date
+//     price
+//   }
+// }
+// `;
+
 const ADD_ORDER = gql`
-  mutation {
-    addOrder(input: {
-      bike: "642d151b212acfeef285ade1",
-      customer: "642d151b212acfeef285ade1",
-      date: "2023-03-17T09:00:00.000Z",
-      price: 500
-    }) {
-      id
-      bike {
-        id
-        brand
-        model
-      }
-      customer {
-        id
-        firstname
-        lastname
-      }
-      date
-      price
+  mutation AddOrder($input: OrderInput!) {
+    addOrder(input: $input) {
+          customer
+          bike
+          date
+          price
     }
   }
 `;
@@ -40,9 +44,20 @@ const ADD_ORDER = gql`
 export default function MyComponent() {
   const [addOrder, { loading, error, data }] = useMutation(ADD_ORDER);
 
+  const testId = "6430196df543f809796bbb1a";
+
   const handleAddOrder = async () => {
     try {
-      const result = await addOrder();
+      const result = await addOrder({
+        variables: {
+          input: {
+            bike: testId,
+            customer: testId,
+            date: "now",
+            price: 500,
+          },
+        },
+      });
       console.log(result.data);
     } catch (error) {
       console.error(error);
@@ -61,43 +76,6 @@ export default function MyComponent() {
 }
 
 
-// // Komponente B
-// function ComponentB({ onTextChange }) {
-//   const [text, setText] = useState("");
-
-//   const handleTextChange = (event) => {
-//     const newText = event.target.value;
-//     setText(newText);
-//     onTextChange(newText); // Aufruf der Funktion in Komponente A mit dem neuen Text
-//   };
-
-//   return (
-//     <div>
-//       <input type="text" value={text} onChange={handleTextChange} />
-//     </div>
-//   );
-// }
-
-// // Komponente A
-// function ComponentA() {
-//   let store = "";
-//   const handleTextChange = (newText) => {
-//     store = newText;
-//     console.log(`Neuer Text: ${newText}`);
-//     // hier kann die Komponente A den neuen Text verwenden oder speichern
-//   };
-
-//   const handleClick = () => {
-//     handleTextChange(store); // hier wird die Funktion in Komponente B aufgerufen
-//   };
-
-//   return (
-//     <div>
-//       <button onClick={handleClick}>Textfeld aktualisieren</button>
-//       <ComponentB onTextChange={handleTextChange} />
-//     </div>
-//   );
-// }
 
 function About() {
     const data = use(query_stores())
@@ -119,12 +97,12 @@ async function query_stores() {
     const apolloClient = getClient()
     const { data } = await apolloClient.query({
         query: gql`
-            {
-                getBikeStores {
-                    id
-                    name
-                }
-            }
+           query {
+             getBikeStores {
+             id
+               name
+             }
+           }
         `,
     });
     return {

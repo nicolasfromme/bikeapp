@@ -7,10 +7,15 @@ import StepLabel from '@mui/material/StepLabel';
 import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
 import { pink } from '@mui/material/colors';
-
+import { gql, useMutation } from "@apollo/client";
 import { Divider, Grid, Box, TextField, Button, Paper, FormControlLabel, Radio, RadioGroup, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import Image from "next/image";
 import { CreditCard, Payment, MonetizationOn } from "@mui/icons-material";
+import { use } from 'react';
+import { getClient } from "app/apolloclient";
+
+import { useQuery } from '@apollo/client';
+
 
 const libraries = ["places"];
 
@@ -73,6 +78,26 @@ function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelec
     )
 }
 function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues }) {
+
+    const GET_ALL_BIKES = gql`
+    query {
+        getBikes {
+            id
+            type
+            brand
+            model 
+            year 
+            color 
+            price
+            description
+            rented
+            bikeStore
+      }
+    }
+  `;
+    const { loading, error, data } = useQuery(GET_ALL_BIKES);
+    console.log(data)
+
 
     const handleAddField = () => {
         setFields([...fields, { id: Date.now(), value: "" }]);
@@ -202,7 +227,10 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
         </div>
     );
 }
-function UserLogin(username, setUsername, password, setPassword) {
+function UserLogin() {
+
+    const [username, setUsername] = useState({});
+    const [password, setPassword] = useState({});
 
     const handleUsernameChange = (event) => {
         setUsername(event.target.value);
@@ -247,7 +275,6 @@ function UserLogin(username, setUsername, password, setPassword) {
         </Box>
     );
 }
-
 function PaymentPage() {
     return (
         <div>
@@ -303,79 +330,21 @@ function PaymentPage() {
         </div>
     );
 }
-// function Content({ activeStep }) {
-
-//     const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
-
-//     const [selectedCity, setSelectedCity] = useState(null);
-//     const [selectedStore, setSelectedStore] = useState(null);
-
-//     const [selectedOptions, setSelectedOptions] = useState({});
-//     const [inputValues, setInputValues] = useState({});
-
-
-//     return (
-//         <div className="p-10">
-//             {activeStep == 0 ? (
-//                 <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
-
-//             ) : activeStep == 1 ? (
-//                 <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
-//             ) : activeStep == 2 ? (
-//                 <UserLogin activeStep={activeStep} />
-//             ) : (
-//                 <PaymentPage />
-//             )}
-//         </div>
-//     )
-
-// }
-
-function addOrderToDB(customerId, bikeId, date, price) {
-    const query = `mutation {
-      addOrder(
-        customer: "${customerId}",
-        bike: "${bikeId}",
-        date: "${date}",
-        price: "${price}"
-      ) {
-        id
-        customer {
-          id
-          name
-        }
-        bike {
-          id
-          model
-        }
-        date
-        price
-      }
-    }`;
-
-    return fetch('/api/graphql', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-    }).then((response) => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    }).then((json) => {
-        return json.data.addOrder;
-    }).catch((error) => {
-        console.error('There was a problem adding the order:', error);
-    });
-}
-
+const ADD_ORDER = gql`
+  mutation AddOrder($input: OrderInput!) {
+    addOrder(input: $input) {
+          customer
+          bike
+          date
+          price
+    }
+  }
+`;
+import { useRouter } from "next/navigation";
 function HorizontalLinearStepper({ activeStep, setActiveStep }) {
-
-
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+    const router = useRouter();
+    const [username, setUsername] = useState({});
+    const [password, setPassword] = useState({});
 
     const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
 
@@ -389,6 +358,38 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
 
     const [skipped, setSkipped] = React.useState(new Set());
 
+    const [addOrder, { loading, error, data }] = useMutation(ADD_ORDER);
+
+    const testId = "6430196df543f809796bbb1a";
+
+
+    const handleAddOrder = async () => {
+        try {
+            const result = await addOrder({
+                variables: {
+                    input: {
+                        bike: testId,
+                        customer: testId,
+                        date: "now",
+                        price: 500,
+                    },
+                },
+            });
+            console.log(result.data);
+            let tetsf = { foo: "bar", baz: 123 };
+            router.push({
+                pathname: "/bookingConfirmation",
+                query: { order: JSON.stringify(tetsf) },
+              });
+              
+        } catch (error) {
+            console.error(error);
+            handleReset();
+        }
+    };
+
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error :(</p>;
     const isStepOptional = (step) => {
         return step === 10;
     };
@@ -409,7 +410,7 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
 
         if (activeStep === steps.length - 1) {
             console.log("PUSH")
-            addOrderToDB("username", "fields"," new Date()", "1234")
+            handleAddOrder()
         }
 
     };
@@ -491,7 +492,7 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                             ) : activeStep == 1 ? (
                                 <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
                             ) : activeStep == 2 ? (
-                                <UserLogin activeStep={activeStep} />
+                                <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
                             ) : (
                                 <PaymentPage />
                             )}
@@ -523,6 +524,26 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
     );
 }
 function Map() {
+
+    const GET_ALL_BIKESTORES = gql`
+    query {
+      getBikeStores {
+        id
+        name
+        street
+        city
+        state
+        zip
+        phone
+        email
+      }
+    }
+  `;
+    const { loading, error, data } = useQuery(GET_ALL_BIKESTORES);
+    // const cities = Array.from(new Set(data.getBikeStores.map((store) => store.city)));
+
+    console.log(data)
+
     const mapContainerStyle = {
         width: "65vw",
         height: "60vh",
@@ -555,7 +576,7 @@ function Map() {
             },
         },
     ];
-    const [marker] = useState(null);
+    const [marker] = useState({});
 
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,

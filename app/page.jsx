@@ -67,8 +67,6 @@ export default function Home() {
     </main>
   )
 }
-
-
 function NewsBlog() {
 
   return (
@@ -109,8 +107,6 @@ function NewsBlog() {
   )
 
 }
-
-
 function AppPlacement() {
 
   return (
@@ -170,7 +166,6 @@ function AppPlacement() {
     </div>
   )
 }
-
 function CustomerCharts() {
 
   return (
@@ -218,8 +213,6 @@ function CustomerCharts() {
   )
 
 }
-
-
 function PictureText() {
   const router = useRouter();
 
@@ -257,7 +250,6 @@ function PictureText() {
     </div>
   )
 }
-
 function CityAutocomplete() {
 
   const cities = [

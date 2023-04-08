@@ -1,10 +1,23 @@
-import { useRouter } from "next/router";
+"use client"
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@mui/material";
 
-export default function BookingConfirmation({ pickupLocation, bookedBikes }) {
-  const [message] = useState("Danke für deine Bestellung!");
+export default function BookingConfirmation() {
   const router = useRouter();
+  const { order } = router.query;
+  
+
+  console.log(order)
+
+  bookedBikes = [
+    {
+      id:"0",
+      name: "schnelles Fahrrad",
+    }
+  ]
+  pickupLocation = "Hier"
+  const [message] = useState("Danke für deine Bestellung!");
 
   const handleBackButtonClick = () => {
     router.push("/");

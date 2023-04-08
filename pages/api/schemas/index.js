@@ -29,7 +29,7 @@ export const typeDefs = gql`
         price: String
         description: String
         rented: Boolean
-        bikeStore: BikeStore
+        bikeStore: ID
     }
 
     type Customer {
