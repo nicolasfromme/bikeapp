@@ -37,7 +37,7 @@ export default function StoreData() {
 
     return (
         <div>
-            <h1>StoreData for {data.store}</h1>
+            <h1>StoreData for {data[0].store}</h1>
             <div style={{ height: 300, width: '100%' }}>
                 <DataGrid rows={data} columns={columns} pageSize={5} />
             </div>

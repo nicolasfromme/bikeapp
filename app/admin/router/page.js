@@ -20,7 +20,7 @@ export default async function Router() {
     } else if(role === "employee"){
         useRouter().push('/admin/employee/[employee]')
     } else if (role === "store_manager") {
-        useRouter().push('/admin/store/[store]/employees')
+        useRouter().push('/admin/store/[store]')
     } else if (role === "customer") {
         //route to customer dashboard
     } 
