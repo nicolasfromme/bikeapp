@@ -4,7 +4,6 @@ import ResponsiveAppBar from './responsive_header'
 import { Box, Grid, Link, Typography } from '@mui/material';
 export default function RootLayout({ children }) {
 
-
   return (
     <html lang="en">
       <body >

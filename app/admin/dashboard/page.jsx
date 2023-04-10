@@ -3,7 +3,7 @@ import React from "react";
 import { use } from "react"
 import { useState } from "react";
 
-import { gql } from "@apollo/client";
+import { useQuery, gql } from "@apollo/client";
 import { getClient } from "../../apolloclient";
 
 import StoreData from "../../../components/storedata"
@@ -11,33 +11,46 @@ import StoreData from "../../../components/storedata"
 import Box from '@mui/material/Box';
 
 export default function Dashboard() {
-    const [store, setStore] = useState()
-    const dataRaw = use(fetch_data())
-    console.log(dataRaw.props.data.getBikeStores)
-    const data = dataRaw.props.data
+    const [store, setStore] = useState("")
+    const { loading, error, data } = useQuery(gql`
+        {
+            getBikeStores {
+                id
+                name
+            }
+        }
+    `);
 
-    console.log("store:   " + store)
-
-    function handleChange(event) {
-        console.log("handleChange")
-        setStore(event.value);
-    };
-
+    if (loading) return <p>Loading...</p>;
 
     return (
-        <Box style={{height: "700px", padding: "25px"}}>
-            <h1>Dashboard</h1>
-            <div>
-            <h2>Select a store:</h2>
-                <form method="POST">
-                    <input type="text" name="store" value={store} onChange={handleChange} />
-                    
-                </form>
-                {store ? <StoreData/> : null}
-            </div>
-        </Box>
+        <Selection store={store} options={data} />
     )
 }
+
+function Selection({store, options}) {
+        
+    return (
+        <Box sx={{ flexGrow: 1 }}>
+            <FormControl sx={{ minWidth: 120 }}>
+                <InputLabel id={`select-option-label-${id}`}>Option</InputLabel>
+                    <Select
+                        labelId={`select-option-label-${id}`}
+                        id={`select-option-${id}`}
+                        value={store}
+                        onChange={(e) => setStore(e.target.value)}
+                    >
+                            {options.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </Box>
+    )
+}
+
 
 async function fetch_data() {
     const apolloClient = getClient()
