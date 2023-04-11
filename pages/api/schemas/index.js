@@ -62,11 +62,10 @@ export const typeDefs = gql`
     }
     
     type Order {
-        id: ID
-        customer: Customer
-        bike: Bike
-        date: String
-        price: String
+        customer: ID!
+        bike: ID!
+        date: String!
+        price: Int!
     }
 
     type loggedInUserRole {

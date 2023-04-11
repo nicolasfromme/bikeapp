@@ -14,6 +14,7 @@ import PedalBikeIcon from '@mui/icons-material/PedalBike';
 import SearchIcon from '@mui/icons-material/Search';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Questions from './questions_list'
+import { useRouter } from 'next/navigation';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -42,7 +43,7 @@ export default function Home() {
             <h1 className='text-4xl font-bold mb-5'>Wie es funktioniert</h1>
           </div>
           <div className='ml-10'>
-            <div class="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className='flex items-center gap-4'>
                 <SearchIcon fontSize='large' sx={{ color: pink[500] }} />
                 <p className='font-bold text-2xl'>Wähle deine Stadt aus</p>
@@ -66,8 +67,6 @@ export default function Home() {
     </main>
   )
 }
-
-
 function NewsBlog() {
 
   return (
@@ -108,13 +107,11 @@ function NewsBlog() {
   )
 
 }
-
-
 function AppPlacement() {
 
   return (
     <div className='bg-white'>
-      <div class="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className='flex items-center justify-center  text-black'>
           <div className='bg-slate-200 p-10 mt-20 mb-20 w-3/4'>
             <Box sx={{
@@ -169,7 +166,6 @@ function AppPlacement() {
     </div>
   )
 }
-
 function CustomerCharts() {
 
   return (
@@ -217,9 +213,13 @@ function CustomerCharts() {
   )
 
 }
-
-
 function PictureText() {
+  const router = useRouter();
+
+  const handleBookingClick = () => {
+    router.push('/booking');
+  }
+
   return (
     <div className='pt-10 pb-10'>
       <p className='text-2xl font-bold'>Jetzt Buchen</p>
@@ -245,11 +245,11 @@ function PictureText() {
       <div className='mt-5 flex'>
         <CityAutocomplete className="mt-10 bg-slate-100" />
         <Button variant="contained" className='bg-slate-100 hover:bg-pink-500 ml-2 rounded-lg text-black' >Zu den Bikes</Button>
+        <Button variant="contained" className='bg-slate-100 hover:bg-pink-500 ml-2 rounded-lg text-black' onClick={handleBookingClick} >Zur Buchung</Button>
       </div>
     </div>
   )
 }
-
 function CityAutocomplete() {
 
   const cities = [

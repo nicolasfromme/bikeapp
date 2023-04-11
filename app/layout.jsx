@@ -16,7 +16,9 @@ export default function RootLayout({ children }) {
         <ApolloProvider client={client}>
         <ResponsiveAppBar className='text-black' ></ResponsiveAppBar>
         <Box className='bg-white' sx={{ maxWidth: '2100px', margin: '0 auto' }}>
+
           {children}
+
           <Footer />
         </Box>
         </ApolloProvider>

@@ -51,7 +51,7 @@ export default function CustomizedAccordions() {
                                     id={`panel-header-${index}`}
                                     style={{
                                         flexDirection: 'row-reverse',
-                                        '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
+                                        '& .MuiAccordionSummaryExpandIconWrapper.MuiExpanded': {
                                             transform: 'rotate(90deg)',
                                         },
                                     }}
