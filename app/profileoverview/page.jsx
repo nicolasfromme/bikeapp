@@ -43,8 +43,8 @@ const { data, loading, error } = useQuery(gql`
       }
   }
 `)
-if (loading) return <div>Loading...</div>
-    console.log(data)
+/* if (loading) return <div>Loading...</div>
+    console.log(data) */
 
 
 const drawerWidth = 240;
