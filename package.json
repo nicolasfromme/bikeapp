@@ -36,9 +36,14 @@
     "nextjs-cors": "^2.1.2",
     "react": "18.2.0",
     "react-dom": "^18.2.0",
-    "react-google-maps": "^9.4.5",
+
     "react-hook-form": "^7.43.5",
+    "react-pro-sidebar": "^1.0.0"
+
+    "react-google-maps": "^9.4.5",
+   
     "react-material-ui-carousel": "^3.4.2"
+
   },
   "devDependencies": {
     "@types/node": "18.15.0",
