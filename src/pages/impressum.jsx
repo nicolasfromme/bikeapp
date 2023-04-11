@@ -11,7 +11,7 @@ function Impressum() {
             <center>Impressum</center>
           </h1>
         </div>
-        <hr class="rounded" />
+        <hr classname="rounded" />
         <div>
           <h3>Anbieter dieses Angebots</h3>
         </div>

@@ -13,15 +13,21 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
+import Image from 'next/image';
 
-const pages = ['Products', 'Pricing', 'Blog'];
+const pages = ['Fahrräder', 'Stores', 'Buchung'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function AdbIcon(){
   return(
 
     <div>
-      <img src="/logo.svg" alt="" />
+      <Image
+      src="/logo_black.svg"
+      width={200}
+      height={200}
+      alt='logo'
+      />
     </div>
 
   )
@@ -50,7 +56,7 @@ function ResponsiveAppBar() {
     <AppBar position="static"  className='bg-white text-black'>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+          {/* <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} /> */}
           <Typography
             variant="h6"
             noWrap
@@ -66,7 +72,7 @@ function ResponsiveAppBar() {
               textDecoration: 'none',
             }}
           >
-            LOGO
+            <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -105,7 +111,7 @@ function ResponsiveAppBar() {
               ))}
             </Menu>
           </Box>
-          <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
+          {/* <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} /> */}
           <Typography
             variant="h5"
             noWrap
@@ -122,7 +128,7 @@ function ResponsiveAppBar() {
               textDecoration: 'none',
             }}
           >
-            LOGO
+            <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (

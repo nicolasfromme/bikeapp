@@ -1,11 +1,14 @@
 import Bike from '../models/Bike';
-import BikeStore from '../models/BikeStore';
+import BikeStore from '../models/Bikestore';
 import Customer from '../models/Customer';
 import Employee from '../models/Employee';
 import Order from '../models/Order';
 import connectMongo from '../connectMongo';
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 
 export const resolvers = {
+  
   Query: {
     getUsers: async () => {
       await connectMongo()
@@ -38,7 +41,7 @@ export const resolvers = {
         return bikeStore;
       }
     },
-    getBikes: async (_, args) => {
+    getBikes: async (_, args, parent) => {
       await connectMongo();
       const bikes = await Bike.find({});
       if (!bikes) {
@@ -48,7 +51,7 @@ export const resolvers = {
         return bikes;
       }
     },
-    getBike: async (_, args) => {
+    getBike: async (_, args, parent) => {
       await connectMongo();
       const bike = await Bike.findById(args.id);
       if (!bike) {
@@ -156,12 +159,42 @@ export const resolvers = {
       );
       const data = await response.json();
       return {role: data[0].name};
+    },
+
+    getBikesByStore: async (_, args) => {
+      await connectMongo();
+      const bikes = await Bike.find({ bikeStore: args.storeId });
+      if (!bikes) {
+        return [];
+      }
+      else {
+        return bikes;
+      }
+    },
+    getOrdersByStore: async (_, args) => {
+      await connectMongo();
+      const orders = await Order.find({ bikeStore: args.storeId });
+      if (!orders) {
+        return [];
+      }
+      else {
+        return orders;
+      }
+    },
+    getOrdersByCustomer: async (_, args) => {
+      await connectMongo();
+      const orders = await Order.find({ customer: args.customerId });
+      if (!orders) {
+        return [];
+      }
+      else {
+        return orders;
+      }
     }
   },
   Mutation: {
     addBikeStore: async (_, args) => {
       await connectMongo();
-      console.log(args.input.name)
       const bikeStore = new BikeStore({
         name: args.input.name,
         street: args.input.street,
@@ -170,6 +203,8 @@ export const resolvers = {
         zip: args.input.zip,
         phone: args.input.phone,
         email: args.input.email,
+        lat: args.input.lat,
+        long: args.input.long,
       });
       await bikeStore.save();
       return bikeStore;
@@ -191,7 +226,6 @@ export const resolvers = {
     },
     addCustomer: async (_, args) => {
       await connectMongo();
-      console.log(args)
       const customer = new Customer({
         firstname: args.input.firstname,
         lastname: args.input.lastname,
@@ -236,17 +270,21 @@ export const resolvers = {
       await bike.save();
       return bike;
     },
+    
     addOrder: async (_, args) => {
       await connectMongo();
+      const bikeId = args.input.bike;
+      if (!mongoose.Types.ObjectId.isValid(bikeId)) {
+        throw new Error(`Invalid bike ID: ${bikeId}`);
+      }
       const order = new Order({
-        bike: args.input.bike,
-        customer: args.input.customer,
-        employee: args.input.employee,
+        bike: new ObjectId(bikeId),
+        customer: new ObjectId(args.input.customer),
         date: args.input.date,
         price: args.input.price,
-        status: args.input.status,
       });
       await order.save();
+      // // Convert
       return order;
     }
   }

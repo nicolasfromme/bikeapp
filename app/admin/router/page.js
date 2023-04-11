@@ -1,6 +1,7 @@
+"use client"
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { gql } from "@apollo/client";
-import client from "../../../app/apolloclient";
+//import client from "../../apolloclient";
 import { useRouter } from 'next/router';
 
 export default function Router({ role }) {
@@ -26,7 +27,7 @@ export default function Router({ role }) {
         </div>
     )
 } 
-
+/*
 export async function getStaticProps() {
     const { data } = await client.query({
         query: gql`
@@ -45,3 +46,4 @@ export async function getStaticProps() {
       },
     };
   }
+  */

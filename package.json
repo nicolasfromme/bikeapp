@@ -9,9 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.10",
+    "@apollo/client": "^3.7.11",
     "@apollo/react-hooks": "^4.0.0",
     "@auth0/nextjs-auth0": "^2.2.1",
+    "@coreui/react": "^4.7.0",
     "@emotion/react": "^11.10.6",
     "@emotion/server": "^11.10.0",
     "@emotion/styled": "^11.10.6",
@@ -19,20 +20,30 @@
     "@mui/material": "^5.11.9",
     "@mui/x-date-pickers": "^6.0.0",
     "@next/font": "13.1.6",
+    "@react-google-maps/api": "^2.18.1",
+    "@trendyol-js/react-carousel": "^3.0.2",
     "apollo-server-micro": "^2.26.1",
     "dayjs": "^1.11.7",
     "eslint": "8.34.0",
     "eslint-config-next": "13.1.6",
+    "google-map-react": "^2.2.0",
     "graphql": "^16.6.0",
     "install": "^0.13.0",
     "isomorphic-unfetch": "^4.0.2",
     "mongodb": "^5.1.0",
     "mongoose": "^7.0.2",
     "next": "^13.1.6",
+    "nextjs-cors": "^2.1.2",
     "react": "18.2.0",
     "react-dom": "^18.2.0",
+
     "react-hook-form": "^7.43.5",
     "react-pro-sidebar": "^1.0.0"
+
+    "react-google-maps": "^9.4.5",
+   
+    "react-material-ui-carousel": "^3.4.2"
+
   },
   "devDependencies": {
     "@types/node": "18.15.0",
