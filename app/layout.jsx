@@ -2,15 +2,18 @@
 import './globals.css'
 import ResponsiveAppBar from './responsive_header'
 import { Box, Grid, Link, Typography } from '@mui/material';
-import { ApolloProvider } from '@apollo/client';
-import { getClient } from './apolloclient';
+import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
 export default function RootLayout({ children }) {
 
+  const client = new ApolloClient({
+    uri: "http://localhost:3000/api/graphql",
+    cache: new InMemoryCache(),
+});
 
   return (
     <html lang="en">
       <body >
-        <ApolloProvider client={getClient()}>
+        <ApolloProvider client={client}>
         <ResponsiveAppBar className='text-black' ></ResponsiveAppBar>
         <Box className='bg-white' sx={{ maxWidth: '2100px', margin: '0 auto' }}>
 
@@ -18,7 +21,7 @@ export default function RootLayout({ children }) {
 
           <Footer />
         </Box>
-          </ApolloProvider>
+        </ApolloProvider>
       </body>
     </html>
   )
