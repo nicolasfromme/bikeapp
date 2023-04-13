@@ -53,9 +53,9 @@ function ResponsiveAppBar() {
   };
 
   return (
-    <AppBar position="static"  className='bg-white text-black'>
-      <Container maxWidth="xl">
-        <Toolbar disableGutters>
+    <AppBar sx={{zIndex: (theme) => theme.zIndex.drawer + 1}} position="fixed"  className='bg-white text-black'>
+      <Container sx={{zIndex: (theme) => theme.zIndex.drawer + 1}} maxWidth="xl">
+        <Toolbar sx={{zIndex: (theme) => theme.zIndex.drawer + 1}} disableGutters>
           {/* <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} /> */}
           <Typography
             variant="h6"
@@ -70,6 +70,7 @@ function ResponsiveAppBar() {
               letterSpacing: '.3rem',
               color: 'inherit',
               textDecoration: 'none',
+              zIndex: (theme) => theme.zIndex.drawer + 1
             }}
           >
             <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />

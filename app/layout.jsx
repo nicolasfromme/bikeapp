@@ -1,7 +1,7 @@
 "use client"
 import './globals.css'
 import ResponsiveAppBar from './responsive_header'
-import { Box, Grid, Link, Typography } from '@mui/material';
+import { AppBar, Box, Grid, Link, Typography } from '@mui/material';
 import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
 export default function RootLayout({ children }) {
 
@@ -13,15 +13,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body >
+        <Box sx={{display: "flex", minHeight: "100vh", backgroundColor: "#000"}}>
         <ApolloProvider client={client}>
         <ResponsiveAppBar className='text-black' ></ResponsiveAppBar>
-        <Box className='bg-white' sx={{ maxWidth: '2100px', margin: '0 auto' }}>
+        <Box className='bg-white' sx={{ maxWidth: '2100px', flexGrow: "1", margin: '0 auto' }}>
 
           {children}
 
-          <Footer />
+          
         </Box>
+        <Footer />
         </ApolloProvider>
+        </Box>
       </body>
     </html>
   )
@@ -30,7 +33,7 @@ export default function RootLayout({ children }) {
 
 function Footer() {
   return (
-    <Box sx={{ bgcolor: '#121212', color: '#fff', py: 6 }}>
+    <Box sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, marginTop: "auto", position: "fixed", bottom: "-0px", width: "100%", bgcolor: '#121212', color: '#fff', py: 6 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Typography variant="h6" gutterBottom>

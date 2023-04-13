@@ -92,6 +92,7 @@ export const typeDefs = gql`
         phone: Int!
         email: String!
         location: LocationInput!
+        employee: employeeInput!
     }
 
     input BikeInput {
