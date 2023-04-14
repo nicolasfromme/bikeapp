@@ -1,113 +1,112 @@
 "use client"
-import { useMutation } from '@apollo/client';
+import React from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { useStripe } from '@stripe/react-stripe-js';
+import { Button } from '@mui/material';
+import { Elements } from '@stripe/react-stripe-js';
 
-import { useQuery, gql } from '@apollo/client';
+import { TextField } from '@mui/material';
 
-import { use } from 'react';
+import { useState, useEffect } from "react";
+import { Autocomplete } from "@mui/material";
+import { useQuery, gql } from "@apollo/client";
 
-// const GET_BIKE_STORES = gql`
-//   query {
-//     getBikeStores {
-//       id
-//       name
-//     }
-//   }
-// `;
-
-// const ADD_ORDER = gql`
-// mutation {
-//   addOrder(input: {
-//     customer: "6430196df543f809796bbb1a",
-//     bike: "6430196df543f809796bbb1a",
-//     date: "2023-03-17T09:00:00.000Z",
-//     price: 500
-//   }) {
-//     customer
-//     bike
-//     date
-//     price
-//   }
-// }
-// `;
-
-const ADD_ORDER = gql`
-  mutation AddOrder($input: OrderInput!) {
-    addOrder(input: $input) {
-          customer
-          bike
-          date
-          price
+const GET_ALL_BIKESTORES = gql`
+  query {
+    getBikeStores {
+      id
+      name
     }
   }
 `;
 
-export default function MyComponent() {
-  const [addOrder, { loading, error, data }] = useMutation(ADD_ORDER);
+function StoreAutocomplete() {
+  const [storeOptions, setStoreOptions] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [selectedStoreId, setSelectedStoreId] = useState(null);
 
-  const testId = "6430196df543f809796bbb1a";
+  const { loading, error, data } = useQuery(GET_ALL_BIKESTORES);
 
-  const handleAddOrder = async () => {
-    try {
-      const result = await addOrder({
-        variables: {
-          input: {
-            bike: testId,
-            customer: testId,
-            date: "now",
-            price: 500,
-          },
-        },
-      });
-      console.log(result.data);
-    } catch (error) {
+  useEffect(() => {
+    if (data) {
+      setStoreOptions(data.getBikeStores.map((store) => ({ label: store.name, value: store.id })));
+    }
+  }, [data]);
+
+  const handleStoreChange = (event, value) => {
+    if (value) {
+      setSelectedStore(value.label);
+      setSelectedStoreId(value.value);
+      console.log(selectedStoreId)
+    } else {
+      setSelectedStore(null);
+      setSelectedStoreId(null);
+    }
+  };
+
+  return (
+    <Autocomplete
+      disablePortal
+      id="store-autocomplete"
+      options={storeOptions}
+      value={selectedStore}
+      onChange={handleStoreChange}
+      //getOptionLabel={(option) => option.label}
+      renderInput={(params) => <TextField {...params} label="Select a store" />}
+    />
+  );
+}
+
+export default StoreAutocomplete;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+const Payment = () => {
+  const stripe = useStripe();
+
+  const handleCheckoutClick = async () => {
+    const { error } = await stripe.redirectToCheckout({
+      lineItems: [
+        { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: 4 }
+      ],
+      mode: 'payment',
+      successUrl: 'https://example.com/success',
+      cancelUrl: 'https://example.com/cancel',
+    });
+    if (error) {
       console.error(error);
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error :(</p>;
-
   return (
-    <div>
-      <button onClick={handleAddOrder}>Add Order</button>
-      { <p>Order added!</p>}
-    </div>
+      <Button variant="contained" onClick={handleCheckoutClick}>
+        Checkout
+      </Button>
   );
-}
+};
 
-
-
-function About() {
-    const data = use(query_stores())
-    console.log(data.props.data)
-    return (
-        <div>
-            <h1 className="text-black">Store:</h1>
-            <ul className="text-black">
-                {data.props.data.getBikeStores.map(store => (
-                    <li key={store.id}>{store.name}</li>
-                ))}
-            </ul>
-        </div>
-
-    )
-}
-
-async function query_stores() {
-    const apolloClient = getClient()
-    const { data } = await apolloClient.query({
-        query: gql`
-           query {
-             getBikeStores {
-             id
-               name
-             }
-           }
-        `,
-    });
-    return {
-        props: {
-            data,
-        },
-    };
-}
+function test(){
+  return(
+    <div>
+    <Elements stripe={stripePromise}>
+      <Payment/>
+    </Elements>
+    </div>
+  )
+};

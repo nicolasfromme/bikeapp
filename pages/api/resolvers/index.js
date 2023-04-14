@@ -273,6 +273,7 @@ export const resolvers = {
     
     addOrder: async (_, args) => {
       await connectMongo();
+      console.log(args)
       const bikeId = args.input.bike;
       if (!mongoose.Types.ObjectId.isValid(bikeId)) {
         throw new Error(`Invalid bike ID: ${bikeId}`);

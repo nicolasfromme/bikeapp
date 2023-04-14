@@ -17,7 +17,8 @@ export const typeDefs = gql`
         phone: Int
         email: String
         bikes: [Bike]
-        location: Location
+        lat: String
+        lng: String
         employees: [employee]
     }
 
@@ -32,6 +33,8 @@ export const typeDefs = gql`
         description: String
         rented: Boolean
         bikeStore: String
+        pricetag: String
+        imageURL: String
     }
 
     type Customer {
@@ -104,6 +107,8 @@ export const typeDefs = gql`
         description: String!
         rented: Boolean!
         bikeStore: ID!
+        pricetag: String
+        imageURL: String
     }
 
     input CustomerInput {

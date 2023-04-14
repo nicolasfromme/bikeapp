@@ -34,6 +34,14 @@ const BikeSchema = new Schema({
         required: true,
         default: false,
     },
+    pricetag: {
+        type: String,
+        required: true,
+    },
+    imageURL :{
+        type: String,
+        required: true,
+    },
     bikeStore: {
         type: Schema.Types.ObjectId,
         ref: 'BikeStore',

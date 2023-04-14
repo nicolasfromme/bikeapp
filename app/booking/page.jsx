@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { GoogleMap, useLoadScript, MarkerF } from "@react-google-maps/api";
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
@@ -14,7 +14,15 @@ import { CreditCard, Payment, MonetizationOn } from "@mui/icons-material";
 import { use } from 'react';
 import { getClient } from "app/apolloclient";
 
+import dayjs, { Dayjs } from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+
+
 import { useQuery } from '@apollo/client';
+
+
 
 
 const libraries = ["places"];
@@ -33,16 +41,94 @@ export default function Booking() {
     );
 }
 
-function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelectedStore }) {
-    const listOfCities = ["City 1", "City 2", "City 3"];
-    const listOfStores = ["Store 1", "Store 2", "Store 3"];
+function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelectedStore, selectedStoreId, setSelectedStoreId }) {
+    const [listOfCities, setListOfCities] = useState({});
+    const [listOfStores, setListOfStores] = useState({});
+
     const handleCityChange = (event, value) => {
         setSelectedCity(value);
     };
 
     const handleStoreChange = (event, value) => {
-        setSelectedStore(value);
+        setSelectedStore(value.label);
+        setSelectedStoreId(value.value);
     };
+
+    //map zeug
+
+    const [markers, setMarkers] = useState([]);
+
+    const GET_ALL_BIKESTORES = gql`
+      query {
+        getBikeStores {
+          id
+          name
+          street
+          city
+          state
+          zip
+          phone
+          email
+          lat
+          lng
+        }
+      }
+    `;
+
+    const { loading, error, data, refetch } = useQuery(GET_ALL_BIKESTORES, {
+        skip: true,
+    });
+
+    const handleMarkerClick = (marker) => {
+        if (marker.city !== selectedCity) {
+            setSelectedCity(marker.city);
+        }
+        if (marker.name !== selectedStore) {
+            setSelectedStore(marker.name);
+            setSelectedStoreId(marker.id);
+            console.log(marker.id)
+        }
+    };
+    useEffect(() => {
+        const fetchData = async () => {
+            const result = await refetch();
+            const stores = result.data.getBikeStores;
+            const cities = [...new Set(stores.map((store) => store.city))];
+
+            setListOfStores(result.data.getBikeStores.map((store) => ({ label: store.name, value: store.id })));
+            setListOfCities(cities);
+
+            const newMarkers = stores.map((store) => ({
+                id: store.id,
+                name: store.name,
+                city: store.city,
+                coordinates: {
+                    lat: parseFloat(store.lat),
+                    lng: parseFloat(store.lng),
+                },
+            }));
+
+            setMarkers(newMarkers);
+        };
+        fetchData();
+    }, [refetch]);
+
+    const center = {
+        lat: 49.488888,
+        lng: 8.469167,
+    };
+
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+        libraries: ['places'],
+    });
+
+    if (loadError) return 'Error loading maps';
+    if (!isLoaded) return 'Loading Maps';
+
+    const styles = require('./GoogleMapStyles.json');
+
+
     return (
         <div>
             <div className="flex justify-center items-center mb-10">
@@ -72,12 +158,42 @@ function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelec
                 </div>
             </div>
             <div className="flex justify-center items-center">
-                <Map />
+
+                <GoogleMap
+                    mapContainerStyle={{
+                        width: '65vw',
+                        height: '60vh',
+                    }}
+                    zoom={15}
+                    center={center}
+                    options={{
+                        disableDefaultUI: true,
+                        draggable: true,
+                        keyboardShortcuts: false,
+                        scaleControl: true,
+                        scrollwheel: true,
+                        styles: styles,
+                    }}
+                >
+                    {markers.map((marker) => (
+                        <MarkerF
+                            key={marker.name}
+                            position={marker.coordinates}
+                            onClick={() => handleMarkerClick(marker)}
+                            icon={{
+                                url: '/shop.svg',
+                                scaledSize: new window.google.maps.Size(40, 40),
+                                origin: new window.google.maps.Point(0, 0),
+                                anchor: new window.google.maps.Point(15, 15),
+                            }}
+                        />
+                    ))}
+                </GoogleMap>
             </div>
         </div>
     )
 }
-function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues }) {
+function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues, fromDate, setFromDate, toDate, setToDate }) {
 
     const GET_ALL_BIKES = gql`
     query {
@@ -92,12 +208,18 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
             description
             rented
             bikeStore
+            imageURL
+            pricetag
       }
     }
   `;
     const { loading, error, data } = useQuery(GET_ALL_BIKES);
     console.log(data)
-
+    const options = data?.getBikes.map((bike) => ({
+        value: bike.id,
+        label: bike.model,
+        image: bike.imageURL,
+    })) || [];
 
     const handleAddField = () => {
         setFields([...fields, { id: Date.now(), value: "" }]);
@@ -134,6 +256,13 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
     const handleInputChange = (id, input) => {
         setInputValues({ ...inputValues, [id]: input });
     };
+    const handleStartDateChange = (value) => {
+        setFromDate(value)
+    }
+    const handleToDateChange = (value) => {
+        setToDate(value)
+    }
+
 
     return (
         <Box>
@@ -153,6 +282,11 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
                             setSelectedOption={handleOptionChange}
                             inputValue={inputValues[field.id]}
                             setInputValue={handleInputChange}
+                            options={options}
+                            fromDate={fromDate}
+                            setFromDate={handleStartDateChange}
+                            toDate={toDate}
+                            setToDate={handleToDateChange}
                         />
                         <Button
                             variant="outlined"
@@ -167,17 +301,17 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
 
                 </Box>
             ))}
-            <Button variant="contained" onClick={handleAddField}>
-                +
+            <Button
+                variant="contained"
+                onClick={handleAddField}
+            >
+                <p className="text-black">+</p>
             </Button>
+
         </Box>
     );
 }
-function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, setInputValue }) {
-    const options = [
-        { value: "option1", label: "Option 1" },
-        { value: "option2", label: "Option 2" }
-    ];
+function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, setInputValue, options, fromDate, setFromDate, toDate, setToDate }) {
 
     const handleOptionChange = (e) => {
         setSelectedOption(id, e.target.value);
@@ -191,9 +325,9 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
         <div>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Box sx={{ mr: 2 }}>
-                    <Image src="/bike_one.png" width={300} height={50} alt="" />
+                    <Image src={options.find((option) => option.value === selectedOption)?.image} width={300} height={50} alt="" />
                 </Box>
-                <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ width: 200 }}>
                     <FormControl sx={{ minWidth: 120 }}>
                         <InputLabel id={`select-option-label-${id}`}>Option</InputLabel>
                         <Select
@@ -210,27 +344,45 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
                         </Select>
                     </FormControl>
                 </Box>
+
                 <Box sx={{ mr: 2 }}>
-                    <TextField label="Number" value={inputValue} onChange={handleInputChange} />
-                </Box>
-                {/* <RadioGroup row value="1" onChange={handleRadioChange}>
-                    {[1, 2, 3].map((value) => (
-                        <FormControlLabel
-                            key={value}
-                            value={value.toString()}
-                            control={<Radio />}
-                            label={`Radio ${value}`}
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                            label="Start Datum"
+                            value={fromDate}
+                            onChange={(newValue) => setFromDate(newValue)}
                         />
-                    ))}
-                </RadioGroup> */}
+                    </LocalizationProvider>
+                </Box>
+                <Box sx={{ mr: 2 }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                            label="End Datum"
+                            value={toDate}
+                            onChange={(newValue) => setToDate(newValue)}
+                        />
+                    </LocalizationProvider>
+                </Box>
+                {/* <Box sx={{ mr: 2 }}>
+                    <TextField label="Number" value={inputValue} onChange={handleInputChange} />
+                </Box> */}
             </Box>
         </div>
     );
 }
 function UserLogin() {
-
-    const [username, setUsername] = useState({});
-    const [password, setPassword] = useState({});
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        firstname: '',
+        lastname: '',
+        email: '',
+        phone: '',
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+    });
 
     const handleUsernameChange = (event) => {
         setUsername(event.target.value);
@@ -238,6 +390,10 @@ function UserLogin() {
 
     const handlePasswordChange = (event) => {
         setPassword(event.target.value);
+    };
+
+    const handleFormDataChange = (event) => {
+        setFormData({ ...formData, [event.target.name]: event.target.value });
     };
 
     const handleLoginClick = () => {
@@ -267,8 +423,86 @@ function UserLogin() {
                             />
                         </Box>
                         <Button variant="contained" fullWidth onClick={handleLoginClick}>
-                            Login
+                            <p className="text-black">
+                                Login
+                            </p>
                         </Button>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    <Paper elevation={3} sx={{ p: 2 }}>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="First Name"
+                                fullWidth
+                                name="firstname"
+                                value={formData.firstname}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Last Name"
+                                fullWidth
+                                name="lastname"
+                                value={formData.lastname}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Email"
+                                fullWidth
+                                name="email"
+                                value={formData.email}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Phone"
+                                fullWidth
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Street"
+                                fullWidth
+                                name="street"
+                                value={formData.street}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="City"
+                                fullWidth
+                                name="city"
+                                value={formData.city}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="State"
+                                fullWidth
+                                name="state"
+                                value={formData.state}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="ZIP"
+                                fullWidth
+                                name="zip"
+                                value={formData.zip}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>
@@ -348,11 +582,19 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
 
     const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
 
-    const [selectedCity, setSelectedCity] = useState(null);
-    const [selectedStore, setSelectedStore] = useState(null);
+    const [selectedCity, setSelectedCity] = useState({});
+    const [selectedStore, setSelectedStore] = useState({});
 
     const [selectedOptions, setSelectedOptions] = useState({});
     const [inputValues, setInputValues] = useState({});
+
+
+    const [selectedStoreId, setSelectedStoreId] = useState({});
+
+
+
+    const [fromDate, setFromDate] = React.useState(dayjs('2023-03-06'));
+    const [toDate, setToDate] = React.useState(dayjs('2022-03-07'));
 
     const steps = ['Choose Store', 'Choose Bike', 'User Login', 'Payment'];
 
@@ -364,28 +606,56 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
 
 
     const handleAddOrder = async () => {
+        const output = {
+            selectedStoreId: selectedStoreId,
+            fields: fields,
+            selectedOptions: selectedOptions,
+            fromDate: fromDate,
+            toDate: toDate
+
+        }
+        const customerId = "642d151b212acfeef285ade1";
+        const price = 100;
+
+        const bookedBikes = [];
+        const bookedBikesToPush = [];
+        for (const key in selectedOptions) {
+          if (key > 100000) {
+
+            bookedBikesToPush.push({
+                bike: selectedOptions[key],
+                customer: customerId,
+                date: fromDate.toISOString(),
+                price: 20
+            })
+
+
+            // bookedBikes.push(selectedOptions[key]);
+          }
+        }
+        
+        console.log(bookedBikesToPush)
         try {
-            const result = await addOrder({
+            const promises = bookedBikesToPush.map((bookedBike) => {
+              return addOrder({
                 variables: {
-                    input: {
-                        bike: testId,
-                        customer: testId,
-                        date: "now",
-                        price: 500,
-                    },
+                  input: {
+                    bike: bookedBike.bike.id,
+                    customer: bookedBike.customer,
+                    date: bookedBike.date,
+                    price: bookedBike.price,
+                  },
                 },
-            });
-            console.log(result.data);
-            let tetsf = { foo: "bar", baz: 123 };
-            router.push({
-                pathname: "/bookingConfirmation",
-                query: { order: JSON.stringify(tetsf) },
               });
-              
-        } catch (error) {
+            });
+            const results = await Promise.all(promises);
+            console.log(results);
+            // Hier kannst du die Weiterleitung zur Bestätigungsseite vornehmen.
+          } catch (error) {
             console.error(error);
             handleReset();
-        }
+          }
+          
     };
 
     if (loading) return <p>Loading...</p>;
@@ -466,13 +736,34 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                         {/* <Content activeStep={activeStep} /> */}
                         <div className="p-10">
                             {activeStep == 0 ? (
-                                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
+                                <StoreSelection
+                                    activeStep={activeStep}
+                                    className=""
+                                    selectedCity={selectedCity}
+                                    selectedStore={selectedStore}
+                                    setSelectedCity={setSelectedCity}
+                                    setSelectedStore={setSelectedStore}
+                                    selectedStoreId={selectedStoreId}
+                                    setSelectedStoreId={setSelectedStoreId}
+                                />
 
                             ) : activeStep == 1 ? (
-                                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
+                                <BikeSelection
+                                    activeStep={activeStep}
+                                    fields={fields}
+                                    setFields={setFields}
+                                    selectedOptions={selectedOptions}
+                                    setSelectedOptions={setSelectedOptions}
+                                    inputValues={inputValues}
+                                    setInputValues={setInputValues}
+                                    fromDate={fromDate}
+                                    setFromDate={handleStartDateChange}
+                                    toDate={toDate}
+                                    setToDate={handleToDateChange} />
                             ) : activeStep == 2 ? (
                                 <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
                             ) : (
+
                                 <PaymentPage />
                             )}
                         </div>
@@ -487,10 +778,29 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                     <Typography >
                         <div className="p-10">
                             {activeStep == 0 ? (
-                                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
+                                <StoreSelection
+                                    activeStep={activeStep}
+                                    className=""
+                                    selectedCity={selectedCity}
+                                    selectedStore={selectedStore}
+                                    setSelectedCity={setSelectedCity}
+                                    setSelectedStore={setSelectedStore}
+                                    selectedStoreId={selectedStoreId}
+                                    setSelectedStoreId={setSelectedStoreId} />
 
                             ) : activeStep == 1 ? (
-                                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
+                                <BikeSelection
+                                    activeStep={activeStep}
+                                    fields={fields}
+                                    setFields={setFields}
+                                    selectedOptions={selectedOptions}
+                                    setSelectedOptions={setSelectedOptions}
+                                    inputValues={inputValues}
+                                    setInputValues={setInputValues}
+                                    fromDate={fromDate}
+                                    setFromDate={setFromDate}
+                                    toDate={toDate}
+                                    setToDate={setToDate} />
                             ) : activeStep == 2 ? (
                                 <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
                             ) : (
@@ -521,99 +831,5 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                 </React.Fragment>
             )}
         </Box>
-    );
-}
-function Map() {
-
-    const GET_ALL_BIKESTORES = gql`
-    query {
-      getBikeStores {
-        id
-        name
-        street
-        city
-        state
-        zip
-        phone
-        email
-      }
-    }
-  `;
-    const { loading, error, data } = useQuery(GET_ALL_BIKESTORES);
-    // const cities = Array.from(new Set(data.getBikeStores.map((store) => store.city)));
-
-    console.log(data)
-
-    const mapContainerStyle = {
-        width: "65vw",
-        height: "60vh",
-    };
-
-    const center = {
-        lat: 49.488888,
-        lng: 8.469167,
-    };
-    const locations = [
-        {
-            name: "a",
-            coordinates: {
-                lat: 49.488888,
-                lng: 8.469167,
-            },
-        },
-        {
-            name: "b",
-            coordinates: {
-                lat: 49.496888,
-                lng: 8.479167,
-            },
-        },
-        {
-            name: "c",
-            coordinates: {
-                lat: 49.483888,
-                lng: 8.479167,
-            },
-        },
-    ];
-    const [marker] = useState({});
-
-    const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-        libraries, // Verwenden Sie die libraries Konstante hier
-    });
-
-    // Der Rest bleibt gleich
-    if (loadError) return "Error loading maps";
-    if (!isLoaded) return "Loading Maps";
-
-    const styles = require("./GoogleMapStyles.json");
-    return (
-        <GoogleMap
-            mapContainerStyle={mapContainerStyle}
-            zoom={15}
-            center={center}
-            options={{
-                disableDefaultUI: true, // disable default map UI
-                draggable: true, // make map draggable
-                keyboardShortcuts: false, // disable keyboard shortcuts
-                scaleControl: true, // allow scale controle
-                scrollwheel: true, // allow scroll wheel
-                styles: styles, // change default map styles
-            }}
-        >
-            {locations.map((location) => (
-                <MarkerF
-                    key={location.name}
-                    position={location.coordinates}
-                    icon={{
-                        url: "/shop.svg",
-                        scaledSize: new window.google.maps.Size(40, 40),
-                        origin: new window.google.maps.Point(0, 0),
-                        anchor: new window.google.maps.Point(15, 15),
-                    }}
-                />
-            ))}
-        </GoogleMap>
     );
 }
