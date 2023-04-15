@@ -5,18 +5,14 @@ import { Button } from "@mui/material";
 
 export default function BookingConfirmation() {
   const router = useRouter();
-  const { order } = router.query;
-  
 
-  console.log(order)
-
-  bookedBikes = [
+  const bookedBikes = [
     {
       id:"0",
       name: "schnelles Fahrrad",
     }
   ]
-  pickupLocation = "Hier"
+  const pickupLocation = "Hier"
   const [message] = useState("Danke für deine Bestellung!");
 
   const handleBackButtonClick = () => {
@@ -33,7 +29,7 @@ export default function BookingConfirmation() {
         ))}
       </ul>
       <Button variant="contained" onClick={handleBackButtonClick}>
-        Zurück zur Hauptseite
+        <p className="text-black">Zurück zur Hauptseite</p> 
       </Button>
     </div>
   );

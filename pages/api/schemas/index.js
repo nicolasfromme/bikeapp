@@ -13,11 +13,12 @@ export const typeDefs = gql`
         street: String
         city: String
         state: String
-        zip: Int
-        phone: Int
+        zip: String
+        phone: String
         email: String
         bikes: [Bike]
-        location: Location
+        lat: String
+        lng: String
         employees: [employee]
     }
 
@@ -32,6 +33,8 @@ export const typeDefs = gql`
         description: String
         rented: Boolean
         bikeStore: String
+        pricetag: String
+        imageURL: String
     }
 
     type Customer {
@@ -39,11 +42,11 @@ export const typeDefs = gql`
         firstname: String
         lastname: String
         email: String
-        phone: Int
+        phone: String
         street: String
         city: String
         state: String
-        zip: Int
+        zip: String
         rentals: [Bike]
     }
 
@@ -65,7 +68,7 @@ export const typeDefs = gql`
         customer: ID!
         bike: ID!
         date: String!
-        price: Int!
+        price: String!
     }
 
     type loggedInUserRole {
@@ -104,17 +107,19 @@ export const typeDefs = gql`
         description: String!
         rented: Boolean!
         bikeStore: ID!
+        pricetag: String
+        imageURL: String
     }
 
     input CustomerInput {
         firstname: String!
         lastname: String!
         email: String!
-        phone: Int!
+        phone: String!
         street: String!
         city: String!
         state: String!
-        zip: Int!
+        zip: String!
     }
 
     input employeeInput {
@@ -144,7 +149,7 @@ export const typeDefs = gql`
         customer: ID!
         bike: ID!
         date: String!
-        price: Int!
+        price: String!
     }
     
     type Mutation {
