@@ -64,6 +64,7 @@ export const typeDefs = gql`
     type Order {
         id: ID!
         customer: ID!
+        bike: String
         bikeModel: String
         date: String!
         price: Int!

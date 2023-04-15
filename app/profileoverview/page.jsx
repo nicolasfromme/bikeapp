@@ -66,7 +66,7 @@ function createData(bestellung, inhalt, eur, datum) {
   }
   
   const rows = [
-    createData("1", "Bike1" , "50", "11.04.23"),
+    createData("1", "...", "...", data.getOrdersByCustomer.price, "..."),
     createData("2", "...", "...","...", "..."),
     createData("3", "...", "...", "...", "..."),
     createData('',"-","-","-", "-"),
@@ -102,12 +102,25 @@ function ResponsiveDrawer(props) {
             city
             email
         }  getOrdersByCustomer(customerId: "642d151b212acfeef285ade1") {
-          bikeModel
+          bike
           date
           price
   }
     }
   `)
+
+  function createData(bestellung, inhalt, eur, datum) {
+    return { bestellung, inhalt, eur, datum};
+  }
+  
+  const rows = [
+    createData("1", "...", "...", data.getOrdersByCustomer.price, "..."),
+    createData("2", "...", "...","...", "..."),
+    createData("3", "...", "...", "...", "..."),
+    createData('',"-","-","-", "-"),
+    createData('', "-", "-","-","-"),
+  ];
+
   
   console.log(data)
   useEffect(() => {
@@ -301,7 +314,7 @@ function ResponsiveDrawer(props) {
               <StyledTableCell component="th" scope="row">
                 {row.bestellung}
               </StyledTableCell>
-              <StyledTableCell align="right">{data.getOrdersByCustomer.price}</StyledTableCell>
+              <StyledTableCell align="right">{row.inhalt}</StyledTableCell>
               <StyledTableCell align="right">{row.eur}</StyledTableCell>
               <StyledTableCell align="right">{row.datum}</StyledTableCell>
             </TableRow>
