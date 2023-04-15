@@ -144,13 +144,13 @@ function AppPlacement() {
                   </p>
                   <div className='w-full'>
                     <div className='flex items-start gap-4 mt-10'>
-                      <Image src="/get_on_app_store.png" alt="" width={200} height={200} className="w-full h-auto" />
-                      <Image src="/get_on_play_store.png" alt="" width={200} height={200} className="w-full h-auto" />
+                      <Image src="/get_on_app_store.png" alt="" width={100} height={100} className="w-full h-auto" />
+                      <Image src="/get_on_play_store.png" alt="" width={100} height={100} className="w-full h-auto" />
                     </div>
                   </div>
                 </div>
               </div>
-              <div className='w-full h-96 flex-grow-1 flex items-center justify-center'>
+              <div className='w-full h-96 flex-grow-1 flex items-center justify-center ml-20'>
                 <Image
                   src="/iphone_app.png"
                   alt=""
@@ -227,15 +227,15 @@ function PictureText() {
         <ul className='list-none' >
           <li>
             <CheckIcon sx={{ color: pink[500] }} className='inline-block' />
-            <p className='ml-5 inline-block'>nr one</p>
+            <p className='ml-5 inline-block'>einfach</p>
           </li>
           <li>
             <CheckIcon sx={{ color: pink[500] }} className='inline-block' />
-            <p className='ml-5 inline-block'>nr two</p>
+            <p className='ml-5 inline-block'>schnell</p>
           </li>
           <li>
             <CheckIcon sx={{ color: pink[500] }} className='inline-block' />
-            <p className='ml-5 inline-block'>nr three</p>
+            <p className='ml-5 inline-block'>günstig</p>
           </li>
         </ul>
       </div>

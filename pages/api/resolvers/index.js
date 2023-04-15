@@ -290,12 +290,12 @@ export const resolvers = {
     
     addOrder: async (_, args) => {
       await connectMongo();
-      /*
+      console.log("Add Order")
+      console.log(args)
       const bikeId = args.input.bike;
       if (!mongoose.Types.ObjectId.isValid(bikeId)) {
         throw new Error(`Invalid bike ID: ${bikeId}`);
       }
-      */
       const order = new Order({
         customer: new ObjectId(args.input.customer),
         bike: args.input.bikeModel,

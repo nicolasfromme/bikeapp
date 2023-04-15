@@ -35,12 +35,13 @@ const BikeStoreSchema = new Schema({
             ref: 'Employee',
         },
     ],
-    locationLat: {
-        type: Number,
+   
+    lat: {
+        type: String,
         required: true,
     },
-    locationLong: {
-        type: Number,
+    lng: {
+        type: String,
         required: true,
     },
     bikes: [

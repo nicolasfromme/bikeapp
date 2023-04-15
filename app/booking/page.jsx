@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { GoogleMap, useLoadScript, MarkerF } from "@react-google-maps/api";
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
@@ -14,35 +14,174 @@ import { CreditCard, Payment, MonetizationOn } from "@mui/icons-material";
 import { use } from 'react';
 import { getClient } from "app/apolloclient";
 
+import { makeStyles } from '@material-ui/core/styles';
+
+import {  List, ListItem, ListItemText } from '@material-ui/core';
+import { useRouter } from "next/navigation";
+import dayjs, { Dayjs } from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import Alert from '@mui/material/Alert';
 import { useQuery } from '@apollo/client';
 
 
+import { loadStripe } from '@stripe/stripe-js';
+import { useStripe } from '@stripe/react-stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+
+
+
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+const GET_ALL_BIKES = gql`
+query {
+  getBikes {
+    id
+    type
+    brand
+    model 
+    year 
+    color 
+    price
+    description
+    rented
+    bikeStore
+    imageURL
+    pricetag
+  }
+}`;
+const GET_ALL_BIKESTORES = gql`
+query {
+  getBikeStores {
+    id
+    name
+    street
+    city
+    state
+    zip
+    phone
+    email
+    lat
+    lng
+  }
+}`;
+const ADD_ORDER = gql`
+  mutation AddOrder($input: OrderInput!) {
+    addOrder(input: $input) {
+          customer
+          bike
+          date
+          price
+    }
+  }
+`;
 const libraries = ["places"];
 
 export default function Booking() {
     const [activeStep, setActiveStep] = React.useState(0);
+    const [listOfCities, setListOfCities] = useState({});
+    const [listOfStores, setListOfStores] = useState({});
+    const [selectableBikes, setselectableBikes] = useState([]);
+
+    const [newMarkers, setnewMarkers] = useState({});
+    //database accces
+    const { loading: loadingBikes, error: errorBikes, data: bikesData } = useQuery(GET_ALL_BIKES);
+    const { loading: loadingBikeStores, error: errorBikeStores, data: bikeStoresData } = useQuery(GET_ALL_BIKESTORES);
+
+    useEffect(() => {
+        if (bikesData) {
+            setselectableBikes(bikesData?.getBikes.map((bike) => ({
+                value: bike.id,
+                label: bike.model,
+                image: bike.imageURL,
+                pricetag: bike.pricetag
+            })) || []);
+        }
+    }, [bikesData]);
+
+    useEffect(() => {
+        if (bikeStoresData) {
+            const stores = bikeStoresData.getBikeStores;
+            const cities = [...new Set(stores.map((store) => store.city))];
+            setListOfStores(stores.map((store) => ({ label: store.name, value: store.id })));
+            setListOfCities(cities);
+            setnewMarkers(stores.map((store) => ({
+                id: store.id,
+                name: store.name,
+                city: store.city,
+                coordinates: {
+                    lat: parseFloat(store.lat),
+                    lng: parseFloat(store.lng),
+                },
+            })))
+        }
+    }, [bikeStoresData]);
+
+    if (loadingBikeStores || loadingBikes) return <p>Loading...</p>;
+    if (errorBikes) return <p>Error errorBikes :(</p>;
+    if (errorBikeStores) return <p>Error errorBikeStores :(</p>;
 
     return (
         <div>
+                      <Elements stripe={stripePromise}>
+
             <div className="flex items-center justify-center p-5">
                 <div className="block w-5/6">
-                    <HorizontalLinearStepper activeStep={activeStep} setActiveStep={setActiveStep} />
+                    <HorizontalLinearStepper
+                        activeStep={activeStep}
+                        setActiveStep={setActiveStep}
+                        markers={newMarkers}
+                        listOfCities={listOfCities}
+                        listOfStores={listOfStores}
+                        selectableBikes={selectableBikes} />
                 </div>
             </div>
+            </Elements>
         </div>
     );
 }
+function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelectedStore, selectedStoreId, setSelectedStoreId, markers, listOfCities, listOfStores }) {
 
-function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelectedStore }) {
-    const listOfCities = ["City 1", "City 2", "City 3"];
-    const listOfStores = ["Store 1", "Store 2", "Store 3"];
     const handleCityChange = (event, value) => {
         setSelectedCity(value);
     };
 
     const handleStoreChange = (event, value) => {
-        setSelectedStore(value);
+        setSelectedStore(value.label);
+        setSelectedStoreId(value.value);
     };
+
+    //map zeug
+
+    const handleMarkerClick = (marker) => {
+        if (marker.city !== selectedCity) {
+            setSelectedCity(marker.city);
+        }
+        if (marker.name !== selectedStore) {
+            setSelectedStore(marker.name);
+            setSelectedStoreId(marker.id);
+            console.log(marker.id)
+        }
+    };
+
+    const center = {
+        lat: 49.488888,
+        lng: 8.469167,
+    };
+
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+        libraries: ['places'],
+    });
+
+    if (loadError) return 'Error loading maps';
+    if (!isLoaded) return 'Loading Maps';
+
+    const styles = require('./GoogleMapStyles.json');
+
+
     return (
         <div>
             <div className="flex justify-center items-center mb-10">
@@ -72,38 +211,53 @@ function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelec
                 </div>
             </div>
             <div className="flex justify-center items-center">
-                <Map />
+
+                <GoogleMap
+                    mapContainerStyle={{
+                        width: '65vw',
+                        height: '60vh',
+                    }}
+                    zoom={15}
+                    center={center}
+                    options={{
+                        disableDefaultUI: true,
+                        draggable: true,
+                        keyboardShortcuts: false,
+                        scaleControl: true,
+                        scrollwheel: true,
+                        styles: styles,
+                    }}
+                >
+                    {markers.map((marker) => (
+                        <MarkerF
+                            key={marker.name}
+                            position={marker.coordinates}
+                            onClick={() => handleMarkerClick(marker)}
+                            icon={{
+                                url: '/shop.svg',
+                                scaledSize: new window.google.maps.Size(40, 40),
+                                origin: new window.google.maps.Point(0, 0),
+                                anchor: new window.google.maps.Point(15, 15),
+                            }}
+                        />
+                    ))}
+                </GoogleMap>
             </div>
         </div>
     )
 }
-function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues }) {
+function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues, fromDate, setFromDate, toDate, setToDate, selectableBikes }) {
 
-    const GET_ALL_BIKES = gql`
-    query {
-        getBikes {
-            id
-            type
-            brand
-            model 
-            year 
-            color 
-            price
-            description
-            rented
-            bikeStore
-      }
-    }
-  `;
-    const { loading, error, data } = useQuery(GET_ALL_BIKES);
-    console.log(data)
 
+    const options = selectableBikes;
 
     const handleAddField = () => {
-        setFields([...fields, { id: Date.now(), value: "" }]);
-        setSelectedOptions({ ...selectedOptions, [fields.length]: options[0].value });
-        setInputValues({ ...inputValues, [fields.length]: "" });
-    };
+        const newId = fields.length > 0 ? fields[fields.length - 1].id + 1 : 1;
+        setFields([...fields, { id: newId, value: "" }]);
+        setSelectedOptions({ ...selectedOptions, [newId]: options[0].value });
+        setInputValues({ ...inputValues, [newId]: "" });
+      };
+      
 
     const handleDeleteField = (id) => {
         const newFields = fields.filter((field) => field.id !== id);
@@ -134,6 +288,13 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
     const handleInputChange = (id, input) => {
         setInputValues({ ...inputValues, [id]: input });
     };
+    const handleStartDateChange = (value) => {
+        setFromDate(value)
+    }
+    const handleToDateChange = (value) => {
+        setToDate(value)
+    }
+
 
     return (
         <Box>
@@ -149,11 +310,17 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
                     }}>
                         <BikeSelectionItem
                             id={field.id}
-                            selectedOption={selectedOptions[field.id] || 'option1'} // hier wird 'option1' als Default-Wert gesetzt
+                            selectedOption={selectedOptions[field.id] || (options.length > 0 ? options[0].value : null)}
                             setSelectedOption={handleOptionChange}
                             inputValue={inputValues[field.id]}
                             setInputValue={handleInputChange}
+                            options={options}
+                            fromDate={fromDate}
+                            setFromDate={handleStartDateChange}
+                            toDate={toDate}
+                            setToDate={handleToDateChange}
                         />
+
                         <Button
                             variant="outlined"
                             color="error"
@@ -167,17 +334,17 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
 
                 </Box>
             ))}
-            <Button variant="contained" onClick={handleAddField}>
-                +
+            <Button
+                variant="contained"
+                onClick={handleAddField}
+            >
+                <p className="text-black">+</p>
             </Button>
+
         </Box>
     );
 }
-function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, setInputValue }) {
-    const options = [
-        { value: "option1", label: "Option 1" },
-        { value: "option2", label: "Option 2" }
-    ];
+function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, setInputValue, options, fromDate, setFromDate, toDate, setToDate }) {
 
     const handleOptionChange = (e) => {
         setSelectedOption(id, e.target.value);
@@ -191,9 +358,9 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
         <div>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Box sx={{ mr: 2 }}>
-                    <Image src="/bike_one.png" width={300} height={50} alt="" />
+                    <Image src={options.find((option) => option.value === selectedOption)?.image} width={300} height={50} alt="" />
                 </Box>
-                <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ width: 200 }}>
                     <FormControl sx={{ minWidth: 120 }}>
                         <InputLabel id={`select-option-label-${id}`}>Option</InputLabel>
                         <Select
@@ -210,27 +377,46 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
                         </Select>
                     </FormControl>
                 </Box>
+
                 <Box sx={{ mr: 2 }}>
-                    <TextField label="Number" value={inputValue} onChange={handleInputChange} />
-                </Box>
-                {/* <RadioGroup row value="1" onChange={handleRadioChange}>
-                    {[1, 2, 3].map((value) => (
-                        <FormControlLabel
-                            key={value}
-                            value={value.toString()}
-                            control={<Radio />}
-                            label={`Radio ${value}`}
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                            label="Start Datum"
+                            value={fromDate}
+                            onChange={(newValue) => setFromDate(newValue)}
                         />
-                    ))}
-                </RadioGroup> */}
+                    </LocalizationProvider>
+                </Box>
+                <Box sx={{ mr: 2 }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                            label="End Datum"
+                            value={toDate}
+                            onChange={(newValue) => setToDate(newValue)}
+                        />
+                    </LocalizationProvider>
+                </Box>
+                {/* <Box sx={{ mr: 2 }}>
+                    <TextField label="Number" value={inputValue} onChange={handleInputChange} />
+                </Box> */}
             </Box>
         </div>
     );
 }
-function UserLogin() {
-
-    const [username, setUsername] = useState({});
-    const [password, setPassword] = useState({});
+function UserLogin({ customerId, setcustomerId }) {
+    const [errorMessage, setErrorMessage] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        firstname: '',
+        lastname: '',
+        email: '',
+        phone: '',
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+    });
 
     const handleUsernameChange = (event) => {
         setUsername(event.target.value);
@@ -240,14 +426,165 @@ function UserLogin() {
         setPassword(event.target.value);
     };
 
-    const handleLoginClick = () => {
-        // handle login button click event
+    const handleFormDataChange = (event) => {
+        setFormData({ ...formData, [event.target.name]: event.target.value });
     };
+
+    const handleLoginClick = () => {
+        setcustomerId("642d151b212acfeef285ade1");
+        // // Validierung der Daten
+        // if (formData.email === '' || !formData.email.includes('@')) {
+        //     setErrorMessage('Ungültige E-Mail-Adresse');
+        //     return;
+        // }
+        // if (formData.phone === '' || !formData.phone.match(/^\d{10}$/)) {
+        //     setErrorMessage('Ungültige Telefonnummer');
+        //     return;
+        // }
+        // if (formData.zip === '' || !formData.zip.match(/^\d{5}$/)) {
+        //     setErrorMessage('Ungültige Postleitzahl');
+        //     return;
+        // }
+        // // Wenn die Validierung erfolgreich war, setze die Fehlermeldung zurück und fahre fort
+        // setErrorMessage('');
+        // // ...
+    };
+
+    const handleConfirmClick = () => {
+        let errors = [];
+
+        // Check if all form fields are filled
+        Object.entries(formData).forEach(([key, value]) => {
+            if (!value) {
+                errors.push(`${key} is required`);
+            }
+        });
+
+        if (errors.length > 0) {
+            setErrorMessage(errors.join('\n;'));
+        } else {
+            setErrorMessage(null);
+            // Proceed with form submission
+            checkCustomerExists(formData);
+        }
+    };
+
+    const getCustomersQuery = gql`
+      query {
+        getCustomers {
+          id
+          firstname
+          lastname
+          email
+          phone
+          street
+          city
+          state
+          zip
+          rentals{
+            id
+          }
+        }
+      }`;
+
+    const addCustomerMutation = gql`
+      mutation($firstname: String!, $lastname: String!, $email: String!, $phone: String!, $street: String!, $city: String!, $state: String!, $zip: String!) {
+        addCustomer(input: {
+          firstname: $firstname,
+          lastname: $lastname,
+          email: $email,
+          phone: $phone,
+          street: $street,
+          city: $city,
+          state: $state,
+          zip: $zip
+        }) {
+          id
+          firstname
+          lastname
+          email
+          phone
+          street
+          city
+          state
+          zip
+        }
+      }
+    `;
+    const { loading, error, data } = useQuery(getCustomersQuery);
+    const [addCustomer] = useMutation(addCustomerMutation);
+
+    const checkCustomerExists = (formData) => {
+        console.log(data.getCustomers)
+        const customer = data.getCustomers.find(
+            (customer) =>
+                customer.firstname == formData.firstname &&
+                customer.lastname == formData.lastname &&
+                customer.email == formData.email &&
+                customer.phone == formData.phone &&
+                customer.street == formData.street &&
+                customer.city == formData.city &&
+                customer.state == formData.state &&
+                customer.zip == formData.zip
+        );
+
+        if (customer) {
+            console.log('Customer exists with id:', customer.id);
+            setcustomerId(customer.id);
+            // hier die weitere Verarbeitung mit der vorhandenen customerId
+        } else {
+            addCustomer({
+                variables: {
+                    firstname: formData.firstname,
+                    lastname: formData.firstname,
+                    email: formData.firstname,
+                    phone: formData.firstname,
+                    street: formData.firstname,
+                    city: formData.firstname,
+                    state: formData.firstname,
+                    zip: formData.firstname
+                },
+                refetchQueries: [{ query: getCustomersQuery }],
+            })
+                .then(({ data }) => {
+                    console.log('Customer added with id:', data.addCustomer.id);
+                    setcustomerId(data.addCustomer.id);
+                    // hier die weitere Verarbeitung mit der neuen customerId
+                })
+                .catch((error) => console.log(error));
+        }
+    };
+
 
     return (
         <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
             <Grid container spacing={2}>
+                <Grid item xs={12}>
+                    {errorMessage && (
+                        <Grid container justifyContent="left" sx={{ mb: 2 }}>
+                            <Grid item xs={12} sm={8} md={6}>
+                                <Alert severity="error" sx={{ justifyContent: 'flex-start' }}>
+                                    {errorMessage}
+                                </Alert>
+                            </Grid>
+                        </Grid>
+                    )}
+                </Grid>
+                <Grid item xs={12}>
+                    {customerId && (
+                        <Grid container justifyContent="left" sx={{ mb: 2 }}>
+                            <Grid item xs={12} sm={8} md={6}>
+                                <Alert severity="success" sx={{ justifyContent: 'flex-start' }}>This is a success alert — check it out!</Alert>
+                            </Grid>
+                        </Grid>
+                    )}
+                </Grid>
                 <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="h5" component="h2" gutterBottom>
+                            Melde dich an ...
+                        </Typography>
+                    </Box>
                     <Paper elevation={3} sx={{ p: 2 }}>
                         <Box sx={{ mb: 2 }}>
                             <TextField
@@ -267,7 +604,95 @@ function UserLogin() {
                             />
                         </Box>
                         <Button variant="contained" fullWidth onClick={handleLoginClick}>
-                            Login
+                            <p className="text-black">
+                                Login
+                            </p>
+                        </Button>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="h5" component="h2" gutterBottom>
+                            ... oder gib deine Daten direkt hier an
+                        </Typography>
+                    </Box>
+                    <Paper elevation={3} sx={{ p: 2 }}>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="First Name"
+                                fullWidth
+                                name="firstname"
+                                value={formData.firstname}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Last Name"
+                                fullWidth
+                                name="lastname"
+                                value={formData.lastname}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Email"
+                                fullWidth
+                                name="email"
+                                value={formData.email}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Phone"
+                                fullWidth
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="Street"
+                                fullWidth
+                                name="street"
+                                value={formData.street}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="City"
+                                fullWidth
+                                name="city"
+                                value={formData.city}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="State"
+                                fullWidth
+                                name="state"
+                                value={formData.state}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="ZIP"
+                                fullWidth
+                                name="zip"
+                                value={formData.zip}
+                                onChange={handleFormDataChange}
+                            />
+                        </Box>
+                        <Button variant="contained" fullWidth onClick={handleConfirmClick}>
+                            <p className="text-black">
+                                Bestätigen
+                            </p>
                         </Button>
                     </Paper>
                 </Grid>
@@ -275,84 +700,91 @@ function UserLogin() {
         </Box>
     );
 }
-function PaymentPage() {
-    return (
-        <div>
-            <Box sx={{ p: 2, borderRadius: 1, boxShadow: 1 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                    Zahlungsmethoden
-                </Typography>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                border: 1,
-                                borderRadius: 1,
-                                p: 2,
-                            }}
-                        >
-                            <CreditCard sx={{ fontSize: 48, mr: 2 }} />
-                            <Typography variant="subtitle1">Kreditkarte</Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                border: 1,
-                                borderRadius: 1,
-                                p: 2,
-                            }}
-                        >
-                            <Payment sx={{ fontSize: 48, mr: 2 }} />
-                            <Typography variant="subtitle1">PayPal</Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                border: 1,
-                                borderRadius: 1,
-                                p: 2,
-                            }}
-                        >
-                            <MonetizationOn sx={{ fontSize: 48, mr: 2 }} />
-                            <Typography variant="subtitle1">Überweisung</Typography>
-                        </Box>
-                    </Grid>
-                </Grid>
-            </Box>
-        </div>
-    );
-}
-const ADD_ORDER = gql`
-  mutation AddOrder($input: OrderInput!) {
-    addOrder(input: $input) {
-          customer
-          bike
-          date
-          price
+function PaymentPage({ fields, selectedOptions, selectableBikes, customerId, fromDate, toDate, handleAddOrder}) {
+    const bikeOrders = fields.map((field) => {
+      const bike = selectableBikes.find((bike) => bike.value === selectedOptions[field.id]);
+      const startDate = field.fromDate;
+      const endDate = field.toDate;
+      return { bike, startDate, endDate };
+    });
+  
+    const total = bikeOrders.length * 50;
+    const bookedBikesToPushIntern = [];
+    for (const key in selectedOptions) {
+            bookedBikesToPushIntern.push({
+                bike: selectedOptions[key],
+                customer: customerId,
+                date_from: fromDate.toISOString(),
+                date_to: toDate.toISOString(),
+                price: 20
+            })
     }
-  }
-`;
-import { useRouter } from "next/navigation";
-function HorizontalLinearStepper({ activeStep, setActiveStep }) {
+    const stripe = useStripe();
+  
+    const handleCheckoutClick = async () => {
+
+        await handleAddOrder()
+      const { error } = await stripe.redirectToCheckout({
+        lineItems: 
+        [
+          { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: bookedBikesToPushIntern.length }
+        ],
+        mode: 'payment',
+        successUrl: 'http://localhost:3000/bookingConfirmation',
+        cancelUrl: 'https://example.com/cancel',
+      });
+      if (error) {
+        console.error(error);
+      }
+    };
+  
+    return (
+      <div>
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Order Summary
+          </Typography>
+          <List sx={{ mb: 2 }}>
+            {bikeOrders.map((order, index) => (
+              <ListItem key={index}>
+                <ListItemText
+                  primary={`${order.bike.label} - ${order.startDate} to ${order.endDate}`}
+                  secondary={<img src={order.bike.image} alt={order.bike.label} width="100" height="50" />}
+                />
+              </ListItem>
+            ))}
+          </List>
+          <Typography variant="h6">Total: ${total}</Typography>
+          <Elements stripe={stripePromise}>
+          <Button variant="contained" sx={{ mt: 2 }} onClick={handleCheckoutClick}>
+            <p className="text-black">Confirm and Pay</p>
+          </Button>
+          </Elements>
+        </Box>
+      </div>
+    );
+  }  
+
+function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCities, listOfStores, selectableBikes }) {
     const router = useRouter();
     const [username, setUsername] = useState({});
     const [password, setPassword] = useState({});
 
-    const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
+    const [fields, setFields] = useState([]);
 
-    const [selectedCity, setSelectedCity] = useState(null);
-    const [selectedStore, setSelectedStore] = useState(null);
+    const [selectedCity, setSelectedCity] = useState("");
+    const [selectedStore, setSelectedStore] = useState("");
 
     const [selectedOptions, setSelectedOptions] = useState({});
     const [inputValues, setInputValues] = useState({});
+
+    const [customerId, setcustomerId] = useState(null);
+
+    const [selectedStoreId, setSelectedStoreId] = useState({});
+
+
+    const [fromDate, setFromDate] = React.useState(dayjs('2023-03-06'));
+    const [toDate, setToDate] = React.useState(dayjs('2022-03-07'));
 
     const steps = ['Choose Store', 'Choose Bike', 'User Login', 'Payment'];
 
@@ -360,32 +792,51 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
 
     const [addOrder, { loading, error, data }] = useMutation(ADD_ORDER);
 
-    const testId = "6430196df543f809796bbb1a";
-
+    const [bookedBikesToPush, setbookedBikesToPush] = useState("");
 
     const handleAddOrder = async () => {
+        const output = {
+            selectedStoreId: selectedStoreId,
+            fields: fields,
+            selectedOptions: selectedOptions,
+            fromDate: fromDate,
+            toDate: toDate
+
+        }
+        console.log(output)
+
+        const bookedBikesToPushIntern = [];
+        for (const key in selectedOptions) {
+                bookedBikesToPushIntern.push({
+                    bike: selectedOptions[key],
+                    customer: customerId,
+                    date_from: fromDate.toISOString(),
+                    date_to: toDate.toISOString(),
+                    price: 20
+                })
+        }
+        setbookedBikesToPush(bookedBikesToPushIntern);
+        console.log(bookedBikesToPushIntern)
         try {
-            const result = await addOrder({
-                variables: {
-                    input: {
-                        bike: testId,
-                        customer: testId,
-                        date: "now",
-                        price: 500,
+            const promises = bookedBikesToPushIntern.map((bookedBike) => {
+                return addOrder({
+                    variables: {
+                        input: {
+                            bike: bookedBike.bike,
+                            customer: bookedBike.customer,
+                            date: bookedBike.date_from,
+                            price: bookedBike.price.toString,
+                        },
                     },
-                },
+                });
             });
-            console.log(result.data);
-            let tetsf = { foo: "bar", baz: 123 };
-            router.push({
-                pathname: "/bookingConfirmation",
-                query: { order: JSON.stringify(tetsf) },
-              });
-              
+            const results = await Promise.all(promises);
+            console.log(results);
         } catch (error) {
             console.error(error);
             handleReset();
         }
+
     };
 
     if (loading) return <p>Loading...</p>;
@@ -466,14 +917,55 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                         {/* <Content activeStep={activeStep} /> */}
                         <div className="p-10">
                             {activeStep == 0 ? (
-                                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
+                                <StoreSelection
+                                    activeStep={activeStep}
+                                    className=""
+                                    selectedCity={selectedCity}
+                                    selectedStore={selectedStore}
+                                    setSelectedCity={setSelectedCity}
+                                    setSelectedStore={setSelectedStore}
+                                    selectedStoreId={selectedStoreId}
+                                    setSelectedStoreId={setSelectedStoreId}
+                                    markers={markers}
+                                    listOfCities={listOfCities}
+                                    listOfStores={listOfStores}
+                                />
 
                             ) : activeStep == 1 ? (
-                                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
+                                <BikeSelection
+                                    activeStep={activeStep}
+                                    fields={fields}
+                                    setFields={setFields}
+                                    selectedOptions={selectedOptions}
+                                    setSelectedOptions={setSelectedOptions}
+                                    inputValues={inputValues}
+                                    setInputValues={setInputValues}
+                                    fromDate={fromDate}
+                                    setFromDate={handleStartDateChange}
+                                    toDate={toDate}
+                                    setToDate={handleToDateChange}
+                                    selectableBikes={selectableBikes} />
                             ) : activeStep == 2 ? (
-                                <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
+                                <UserLogin
+                                    activeStep={activeStep}
+                                    username={username}
+                                    setUsername={setUsername}
+                                    password={password}
+                                    setPassword={setPassword}
+                                    customerId={customerId}
+                                    setcustomerId={setcustomerId} />
                             ) : (
-                                <PaymentPage />
+
+                                <PaymentPage 
+                                    fields={fields}
+                                    selectedOptions={selectedOptions}
+                                    selectableBikes={selectableBikes}
+                                    bookedBikesToPush={bookedBikesToPush}
+                                    customerId={customerId}
+                                    fromDate={fromDate}
+                                    toDate={toDate}
+                                    handleAddOrder={handleAddOrder}
+                                />
                             )}
                         </div>
                     </Typography>
@@ -487,14 +979,53 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                     <Typography >
                         <div className="p-10">
                             {activeStep == 0 ? (
-                                <StoreSelection activeStep={activeStep} className="" selectedCity={selectedCity} selectedStore={selectedStore} setSelectedCity={setSelectedCity} setSelectedStore={setSelectedStore} />
+                                <StoreSelection
+                                    activeStep={activeStep}
+                                    className=""
+                                    selectedCity={selectedCity}
+                                    selectedStore={selectedStore}
+                                    setSelectedCity={setSelectedCity}
+                                    setSelectedStore={setSelectedStore}
+                                    selectedStoreId={selectedStoreId}
+                                    setSelectedStoreId={setSelectedStoreId}
+                                    markers={markers}
+                                    listOfCities={listOfCities}
+                                    listOfStores={listOfStores} />
 
                             ) : activeStep == 1 ? (
-                                <BikeSelection activeStep={activeStep} fields={fields} setFields={setFields} selectedOptions={selectedOptions} setSelectedOptions={setSelectedOptions} inputValues={inputValues} setInputValues={setInputValues} />
+                                <BikeSelection
+                                    activeStep={activeStep}
+                                    fields={fields}
+                                    setFields={setFields}
+                                    selectedOptions={selectedOptions}
+                                    setSelectedOptions={setSelectedOptions}
+                                    inputValues={inputValues}
+                                    setInputValues={setInputValues}
+                                    fromDate={fromDate}
+                                    setFromDate={setFromDate}
+                                    toDate={toDate}
+                                    setToDate={setToDate}
+                                    selectableBikes={selectableBikes} />
                             ) : activeStep == 2 ? (
-                                <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
+                                <UserLogin
+                                    activeStep={activeStep}
+                                    username={username}
+                                    setUsername={setUsername}
+                                    password={password}
+                                    setPassword={setPassword}
+                                    customerId={customerId}
+                                    setcustomerId={setcustomerId} />
                             ) : (
-                                <PaymentPage />
+                                <PaymentPage 
+                                    fields={fields}
+                                    selectedOptions={selectedOptions}
+                                    selectableBikes={selectableBikes}
+                                    bookedBikesToPush={bookedBikesToPush}
+                                    customerId={customerId}
+                                    fromDate={fromDate}
+                                    toDate={toDate}
+                                    handleAddOrder={handleAddOrder}
+                                />
                             )}
                         </div>
                     </Typography>
@@ -521,99 +1052,5 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                 </React.Fragment>
             )}
         </Box>
-    );
-}
-function Map() {
-
-    const GET_ALL_BIKESTORES = gql`
-    query {
-      getBikeStores {
-        id
-        name
-        street
-        city
-        state
-        zip
-        phone
-        email
-      }
-    }
-  `;
-    const { loading, error, data } = useQuery(GET_ALL_BIKESTORES);
-    // const cities = Array.from(new Set(data.getBikeStores.map((store) => store.city)));
-
-    console.log(data)
-
-    const mapContainerStyle = {
-        width: "65vw",
-        height: "60vh",
-    };
-
-    const center = {
-        lat: 49.488888,
-        lng: 8.469167,
-    };
-    const locations = [
-        {
-            name: "a",
-            coordinates: {
-                lat: 49.488888,
-                lng: 8.469167,
-            },
-        },
-        {
-            name: "b",
-            coordinates: {
-                lat: 49.496888,
-                lng: 8.479167,
-            },
-        },
-        {
-            name: "c",
-            coordinates: {
-                lat: 49.483888,
-                lng: 8.479167,
-            },
-        },
-    ];
-    const [marker] = useState({});
-
-    const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-        libraries, // Verwenden Sie die libraries Konstante hier
-    });
-
-    // Der Rest bleibt gleich
-    if (loadError) return "Error loading maps";
-    if (!isLoaded) return "Loading Maps";
-
-    const styles = require("./GoogleMapStyles.json");
-    return (
-        <GoogleMap
-            mapContainerStyle={mapContainerStyle}
-            zoom={15}
-            center={center}
-            options={{
-                disableDefaultUI: true, // disable default map UI
-                draggable: true, // make map draggable
-                keyboardShortcuts: false, // disable keyboard shortcuts
-                scaleControl: true, // allow scale controle
-                scrollwheel: true, // allow scroll wheel
-                styles: styles, // change default map styles
-            }}
-        >
-            {locations.map((location) => (
-                <MarkerF
-                    key={location.name}
-                    position={location.coordinates}
-                    icon={{
-                        url: "/shop.svg",
-                        scaledSize: new window.google.maps.Size(40, 40),
-                        origin: new window.google.maps.Point(0, 0),
-                        anchor: new window.google.maps.Point(15, 15),
-                    }}
-                />
-            ))}
-        </GoogleMap>
     );
 }
