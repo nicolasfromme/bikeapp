@@ -61,17 +61,17 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-function createData(bestellung, inhalt, eur, datum) {
+/* function createData(bestellung, inhalt, eur, datum) {
     return { bestellung, inhalt, eur, datum};
   }
   
   const rows = [
-    createData("1", "...", "...", data.getOrdersByCustomer.price, "..."),
+    createData("1", "...", "...", "...", "..."),
     createData("2", "...", "...","...", "..."),
     createData("3", "...", "...", "...", "..."),
     createData('',"-","-","-", "-"),
     createData('', "-", "-","-","-"),
-  ];
+  ]; */
 
 
 function ResponsiveDrawer(props) {
@@ -89,6 +89,9 @@ function ResponsiveDrawer(props) {
   const [ort, setOrt] = React.useState();
   const [straße, setStraße] = React.useState();
   const [email, setEmail] = React.useState();
+  const [bike, setBike] = React.useState();
+  const [date, setDate] = React.useState();
+  const [price, setPrice] = React.useState();
 
   const customerId = "642d151b212acfeef285ade1"
 
@@ -114,11 +117,9 @@ function ResponsiveDrawer(props) {
   }
   
   const rows = [
-    createData("1", "...", "...", data.getOrdersByCustomer.price, "..."),
+    createData("1", "...", "...", "...", "..."),
     createData("2", "...", "...","...", "..."),
     createData("3", "...", "...", "...", "..."),
-    createData('',"-","-","-", "-"),
-    createData('', "-", "-","-","-"),
   ];
 
   
@@ -131,6 +132,9 @@ function ResponsiveDrawer(props) {
       setOrt(data.getCustomer.city);
       setStraße(data.getCustomer.street);
       setEmail(data.getCustomer.email);
+      setBike(data.getOrdersByCustomer[0].bike);
+      setDate(data.getOrdersByCustomer[0].date);
+      setPrice(data.getOrdersByCustomer[0].price);
     }
   }, [data]);
 
@@ -306,7 +310,7 @@ function ResponsiveDrawer(props) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
+          {[rows[0]].map((row) => (
             <TableRow
               key={row.name}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -314,9 +318,22 @@ function ResponsiveDrawer(props) {
               <StyledTableCell component="th" scope="row">
                 {row.bestellung}
               </StyledTableCell>
-              <StyledTableCell align="right">{row.inhalt}</StyledTableCell>
-              <StyledTableCell align="right">{row.eur}</StyledTableCell>
-              <StyledTableCell align="right">{row.datum}</StyledTableCell>
+              <StyledTableCell align="right">{bike}</StyledTableCell>
+              <StyledTableCell align="right">{price}</StyledTableCell>
+              <StyledTableCell align="right">{date}</StyledTableCell>
+            </TableRow>
+          ))}
+          {rows.slice(1).map((row) => (
+            <TableRow
+              key={row.name}
+              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+            >
+              <StyledTableCell component="th" scope="row">
+                {row.bestellung}
+              </StyledTableCell>
+              <StyledTableCell align="right"></StyledTableCell>
+              <StyledTableCell align="right"></StyledTableCell>
+              <StyledTableCell align="right"></StyledTableCell>
             </TableRow>
           ))}
         </TableBody>
