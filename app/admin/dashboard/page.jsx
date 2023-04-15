@@ -96,39 +96,6 @@ export default function Dashboard() {
 }
 
 function AddEmployee() {
-
-    const [callMutation, { data, loading, error }] = useMutation(gql`
-        mutation {
-            addBikeStore(input: {
-                name: ${StoreData.name},
-                city: ${StoreData.city},
-                street: ${StoreData.street},
-                state: ${StoreData.state},
-                zip: ${StoreData.zipCode},
-                phone: ${StoreData.phoneNumber},
-                email: ${StoreData.email},
-                location: {
-                    long: ${StoreData.locationLong},
-                    lat: ${StoreData.locationLat}
-                },
-                employee: {
-                    firstName: ${StoreData.employeeFirstName}, 
-                    lastName: ${StoreData.employeeLastName},
-                    street: ${StoreData.employeeStreet},
-                    city: ${StoreData.employeeCity},
-                    state: ${StoreData.employeeState},
-                    zip: ${StoreData.employeeZipCode},
-                    phone: ${StoreData.employeePhoneNumber},
-                    email: ${StoreData.employeeEmail},
-                    position: ${StoreData.employeePosition}
-                }
-            }) {
-                id
-                name
-            }
-        }
-    `)
-
     const [storeData, setStoreData] = useState({
         name: "",
         city: "",
@@ -150,6 +117,40 @@ function AddEmployee() {
         employeePosition: "Manager",
     })
 
+    //sollte funktionieren
+    const [callMutation, { data, loading, error }] = useMutation(gql`
+        mutation {
+            addBikeStore(input: {
+                name: "${storeData.name}",
+                city: "${storeData.city}",
+                street: "${storeData.street}",
+                state: "${storeData.state}",
+                zip: "${storeData.zipCode}",
+                phone: "${storeData.phoneNumber}",
+                email: "${storeData.email}",
+                location: {
+                    long: "${storeData.locationLong}",
+                    lat: "${storeData.locationLat}"
+                },
+                employee: {
+                    firstname: "${storeData.employeeFirstName}", 
+                    lastname: "${storeData.employeeLastName}",
+                    street: "${storeData.employeeStreet}",
+                    city: "${storeData.employeeCity}",
+                    state: "${storeData.employeeState}",
+                    zip: "${storeData.employeeZipCode}",
+                    phone: "${storeData.employeePhoneNumber}",
+                    email: "${storeData.employeeEmail}",
+                    position: "${storeData.employeePosition}"
+                }
+            }) {
+                name
+            }
+        }
+    `)
+
+   
+
     const handleChange = (evt) => {
         const value = evt.target.value;
         setStoreData({
@@ -163,14 +164,12 @@ function AddEmployee() {
         callMutation()
     }
 
-    console.log(storeData)
-
     return (
         <Box sx={{ height: "100%", paddingBottom: "200px", width: "100%", flexGrow: 1}}>
             <Typography variant="p" sx={{color: "#000000"}}>Fill out the following form to create a new store</Typography>
             <Box sx={{ paddingTop: "20px", flexGrow: 1 }}>
                 <Box sx={{ border: "1px solid #000", borderRadius: "5px", padding: "10px" }}>
-                    <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.name} margin="normal" label="Name" variant="outlined" />
+                    <TextField id="outlined-basic" name="name" onChange={handleChange} value={storeData.name} margin="normal" label="Name" variant="outlined" />
                     <FormGroup row="true">
                         <TextField id="outlined-basic" name="city" onChange={handleChange} value={storeData.city} sx={{paddingRight: "10px"}} margin="normal" label="City" variant="outlined" />
                         <TextField id="outlined-basic" name="street" onChange={handleChange} value={storeData.street} sx={{paddingRight: "10px"}} margin="normal" label="Street" variant="outlined" />
@@ -178,25 +177,25 @@ function AddEmployee() {
                         <TextField id="outlined-basic" name="zipCode" onChange={handleChange} value={storeData.zipCode} sx={{paddingRight: "10px"}} margin="normal" label="Zip Code" variant="outlined" />
                     </FormGroup>
                     <FormGroup row="true">
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.phoneNumber} sx={{paddingRight: "10px"}} margin="normal" label="Phone Number" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.email} sx={{paddingRight: "10px"}} margin="normal" label="Email" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.locationLong} sx={{paddingRight: "10px"}} margin="normal" label="Location: Long" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.locationLat} sx={{paddingRight: "10px"}} margin="normal" label="Location: Lat" variant="outlined" />
+                        <TextField id="outlined-basic" name="phoneNumber" onChange={handleChange} value={storeData.phoneNumber} sx={{paddingRight: "10px"}} margin="normal" label="Phone Number" variant="outlined" />
+                        <TextField id="outlined-basic" name="email" onChange={handleChange} value={storeData.email} sx={{paddingRight: "10px"}} margin="normal" label="Email" variant="outlined" />
+                        <TextField id="outlined-basic" name="locationLong" onChange={handleChange} value={storeData.locationLong} sx={{paddingRight: "10px"}} margin="normal" label="Location: Long" variant="outlined" />
+                        <TextField id="outlined-basic" name="locationLat" onChange={handleChange} value={storeData.locationLat} sx={{paddingRight: "10px"}} margin="normal" label="Location: Lat" variant="outlined" />
                     </FormGroup>
                     <Divider sx={{ height: "10px"}} />
                     <FormGroup row="true">
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeeFirstName} sx={{paddingRight: "10px"}} margin="normal" label="Employee First Name" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeeLastName} sx={{paddingRight: "10px"}} margin="normal" label="Employee Last Name" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeeFirstName" onChange={handleChange} value={storeData.employeeFirstName} sx={{paddingRight: "10px"}} margin="normal" label="Employee First Name" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeeLastName" onChange={handleChange} value={storeData.employeeLastName} sx={{paddingRight: "10px"}} margin="normal" label="Employee Last Name" variant="outlined" />
                     </FormGroup>
                     <FormGroup row="true">
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeeStreet} sx={{paddingRight: "10px"}} margin="normal" label="Employee Street" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeeCity} sx={{paddingRight: "10px"}} margin="normal" label="Employee City" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeeState} sx={{paddingRight: "10px"}} margin="normal" label="Employee State" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeeZipCode} sx={{paddingRight: "10px"}} margin="normal" label="Employee Zip Code" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeeStreet" onChange={handleChange} value={storeData.employeeStreet} sx={{paddingRight: "10px"}} margin="normal" label="Employee Street" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeeCity" onChange={handleChange} value={storeData.employeeCity} sx={{paddingRight: "10px"}} margin="normal" label="Employee City" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeeState" onChange={handleChange} value={storeData.employeeState} sx={{paddingRight: "10px"}} margin="normal" label="Employee State" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeeZipCode" onChange={handleChange} value={storeData.employeeZipCode} sx={{paddingRight: "10px"}} margin="normal" label="Employee Zip Code" variant="outlined" />
                     </FormGroup>
                     <FormGroup row="true">
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeeEmail} sx={{paddingRight: "10px"}} margin="normal" label="Employee Email" variant="outlined" />
-                        <TextField id="outlined-basic" name="" onChange={handleChange} value={storeData.employeePhoneNumber} sx={{paddingRight: "10px"}} margin="normal" label="Employee Phone Number" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeeEmail" onChange={handleChange} value={storeData.employeeEmail} sx={{paddingRight: "10px"}} margin="normal" label="Employee Email" variant="outlined" />
+                        <TextField id="outlined-basic" name="employeePhoneNumber" onChange={handleChange} value={storeData.employeePhoneNumber} sx={{paddingRight: "10px"}} margin="normal" label="Employee Phone Number" variant="outlined" />
                     </FormGroup>
                     <FormGroup row="true">
                         <TextField id="outlined-basic" sx={{paddingRight: "10px"}} margin="normal" disabled defaultValue="Manager" label="Role" variant="outlined" />

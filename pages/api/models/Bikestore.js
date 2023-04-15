@@ -29,6 +29,20 @@ const BikeStoreSchema = new Schema({
         type: String,
         required: true,
     },
+    employees: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Employee',
+        },
+    ],
+    locationLat: {
+        type: Number,
+        required: true,
+    },
+    locationLong: {
+        type: Number,
+        required: true,
+    },
     bikes: [
         {
             type: Schema.Types.ObjectId,

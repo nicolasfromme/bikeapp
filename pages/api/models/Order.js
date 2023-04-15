@@ -7,7 +7,7 @@ const OrderSchema = new Schema({
         required: true,
     },
     bike: {
-        type: Schema.Types.ObjectId,
+        type: String,
         ref: 'Bike',
         required: true,
     },

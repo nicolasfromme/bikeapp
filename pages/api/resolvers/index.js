@@ -64,11 +64,11 @@ export const resolvers = {
     getCustomers: async (_, args) => {
       await connectMongo();
       const customers = await Customer.find({});
-      if (!costumers) {
+      if (!customers) {
         return [];
       }
       else {
-        return costumers;
+        return customers;
       }
     },
     getCustomer: async (_, args) => {
@@ -183,6 +183,7 @@ export const resolvers = {
     },
     getOrdersByCustomer: async (_, args) => {
       await connectMongo();
+      console.log(args.customerId)
       const orders = await Order.find({ customer: args.customerId });
       if (!orders) {
         return [];
@@ -207,6 +208,22 @@ export const resolvers = {
         long: args.input.long,
       });
       await bikeStore.save();
+      console.log(args.input)
+      const employee = new Employee({
+        firstname: args.input.employee.firstname,
+        lastname: args.input.employee.lastname,
+        street: args.input.employee.street,
+        city: args.input.employee.city,
+        state: args.input.employee.state,
+        zip: args.input.employee.zip,
+        phone: args.input.employee.phone,
+        email: args.input.employee.email,
+        position: args.input.employee.position,
+        storeId: bikeStore._id,
+        storeName: bikeStore.name
+      });
+      await employee.save();
+
       return bikeStore;
     },
     addBike: async (_, args) => {
@@ -273,13 +290,15 @@ export const resolvers = {
     
     addOrder: async (_, args) => {
       await connectMongo();
+      /*
       const bikeId = args.input.bike;
       if (!mongoose.Types.ObjectId.isValid(bikeId)) {
         throw new Error(`Invalid bike ID: ${bikeId}`);
       }
+      */
       const order = new Order({
-        bike: new ObjectId(bikeId),
         customer: new ObjectId(args.input.customer),
+        bike: args.input.bikeModel,
         date: args.input.date,
         price: args.input.price,
       });

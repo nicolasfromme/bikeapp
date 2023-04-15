@@ -1,5 +1,6 @@
 "use client"
 import * as React from 'react';
+import { useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import AppBar from '@mui/material/AppBar';
@@ -33,19 +34,6 @@ import TextField from '@mui/material/TextField';
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import { useQuery, gql } from "@apollo/client"
-
-
-const { data, loading, error } = useQuery(gql`
-  query {
-      getOrdersByCustomer{
-          id
-          name
-      }
-  }
-`)
-/* if (loading) return <div>Loading...</div>
-    console.log(data) */
-
 
 const drawerWidth = 240;
 
@@ -94,22 +82,46 @@ function ResponsiveDrawer(props) {
   const [showTableTwo, setShowTableTwo] = React.useState(false);
   const [showTableThree, setShowTableThree] = React.useState(false);
 
-  const data = {
-    vname: "Max",
-    nname: "Mustermann",
-    plz: "68199",
-    ort: "Mannheim",
-    straße: "Preisterstr. 1",
-    email: "bigcock69@hotmail.com"
-  }
-
   const [isEditable, setIsEditable] = React.useState(false);
-  const [vorname, setVorname] = React.useState(data.vname);
-  const [nachname, setNachname] = React.useState(data.nname);
-  const [plz, setPlz] = React.useState(data.plz);
-  const [ort, setOrt] = React.useState(data.ort);
-  const [straße, setStraße] = React.useState(data.straße);
-  const [email, setEmail] = React.useState(data.email);
+  const [vorname, setVorname] = React.useState();
+  const [nachname, setNachname] = React.useState();
+  const [plz, setPlz] = React.useState();
+  const [ort, setOrt] = React.useState();
+  const [straße, setStraße] = React.useState();
+  const [email, setEmail] = React.useState();
+
+  const customerId = "642d151b212acfeef285ade1"
+
+  const { data, loading, error } = useQuery(gql`
+    query {
+        getCustomer(id: "${customerId}") {
+            firstname
+            lastname
+            street
+            zip
+            city
+            email
+        }  getOrdersByCustomer(customerId: "642d151b212acfeef285ade1") {
+          bikeModel
+          date
+          price
+  }
+    }
+  `)
+  
+  console.log(data)
+  useEffect(() => {
+    if (data) {
+      setVorname(data.getCustomer.firstname);
+      setNachname(data.getCustomer.lastname);
+      setPlz(data.getCustomer.zip);
+      setOrt(data.getCustomer.city);
+      setStraße(data.getCustomer.street);
+      setEmail(data.getCustomer.email);
+    }
+  }, [data]);
+
+  if (loading) return <div>Loading...</div>
 
   const handleEdit = () => {
     setIsEditable(true);
@@ -154,11 +166,7 @@ function ResponsiveDrawer(props) {
     setShowTableOne(true);
     setShowTableTwo(false);
     setShowTableThree(false);
-    } else if (text === "Rechnungen") {
-    setShowTableOne(false);
-    setShowTableTwo(true);
-    setShowTableThree(false);
-  } else if (text === "Meine persönlichen Daten") {
+    } else if (text === "Meine persönlichen Daten") {
     setShowTableOne(false);
     setShowTableTwo(false);
     setShowTableThree(true);
@@ -177,7 +185,7 @@ function ResponsiveDrawer(props) {
       <Toolbar />
       <Divider />
       <List>
-        {['Bestellungen', 'Rechnungen', 'Meine persönlichen Daten', 'Einstellungen'].map((text, index) => (
+        {['Bestellungen', 'Meine persönlichen Daten', 'Einstellungen'].map((text, index) => (
           <ListItem key={text} disablePadding>
            <ListItemButton selected={selectedItem === text} onClick={(event) => handleItemClick(text)}>
               <ListItemIcon>
@@ -293,7 +301,7 @@ function ResponsiveDrawer(props) {
               <StyledTableCell component="th" scope="row">
                 {row.bestellung}
               </StyledTableCell>
-              <StyledTableCell align="right">{row.inhalt}</StyledTableCell>
+              <StyledTableCell align="right">{data.getOrdersByCustomer.price}</StyledTableCell>
               <StyledTableCell align="right">{row.eur}</StyledTableCell>
               <StyledTableCell align="right">{row.datum}</StyledTableCell>
             </TableRow>
@@ -301,39 +309,6 @@ function ResponsiveDrawer(props) {
         </TableBody>
       </Table>
     </TableContainer>
-            )}
-        </Typography>
-        <Typography rechnungen>
-        {showTableTwo && (
-  <TableContainer component={Paper}>Hier können Sie Ihre Rechnungen einsehen:
-    <Table sx={{ minWidth: 650 }} aria-label="customized table">
-      <TableHead>
-        <TableRow>
-          <StyledTableCell>Rechnungen</StyledTableCell>
-          <StyledTableCell align="right">Inhalt</StyledTableCell>
-          <StyledTableCell align="right">EUR</StyledTableCell>
-          <StyledTableCell align="right">Datum</StyledTableCell>
-          <StyledTableCell align="right">Status</StyledTableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {rows.map((row) => (
-          <TableRow
-            key={row.bestellung}
-            sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-          >
-            <StyledTableCell component="th" scope="row">
-              {row.bestellung}
-            </StyledTableCell>
-            <StyledTableCell align="right">{row.inhalt}</StyledTableCell>
-            <StyledTableCell align="right">{row.eur}</StyledTableCell>
-            <StyledTableCell align="right">{row.datum}</StyledTableCell>
-            <StyledTableCell align="right">{row.status}</StyledTableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-      </Table>
-      </TableContainer>
             )}
         </Typography>
       </Box>
