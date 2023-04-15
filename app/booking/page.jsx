@@ -14,36 +14,135 @@ import { CreditCard, Payment, MonetizationOn } from "@mui/icons-material";
 import { use } from 'react';
 import { getClient } from "app/apolloclient";
 
+import { makeStyles } from '@material-ui/core/styles';
+
+import {  List, ListItem, ListItemText } from '@material-ui/core';
+import { useRouter } from "next/navigation";
 import dayjs, { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-
-
+import Alert from '@mui/material/Alert';
 import { useQuery } from '@apollo/client';
 
 
+import { loadStripe } from '@stripe/stripe-js';
+import { useStripe } from '@stripe/react-stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 
 
+
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+const GET_ALL_BIKES = gql`
+query {
+  getBikes {
+    id
+    type
+    brand
+    model 
+    year 
+    color 
+    price
+    description
+    rented
+    bikeStore
+    imageURL
+    pricetag
+  }
+}`;
+const GET_ALL_BIKESTORES = gql`
+query {
+  getBikeStores {
+    id
+    name
+    street
+    city
+    state
+    zip
+    phone
+    email
+    lat
+    lng
+  }
+}`;
+const ADD_ORDER = gql`
+  mutation AddOrder($input: OrderInput!) {
+    addOrder(input: $input) {
+          customer
+          bike
+          date
+          price
+    }
+  }
+`;
 const libraries = ["places"];
 
 export default function Booking() {
     const [activeStep, setActiveStep] = React.useState(0);
+    const [listOfCities, setListOfCities] = useState({});
+    const [listOfStores, setListOfStores] = useState({});
+    const [selectableBikes, setselectableBikes] = useState([]);
+
+    const [newMarkers, setnewMarkers] = useState({});
+    //database accces
+    const { loading: loadingBikes, error: errorBikes, data: bikesData } = useQuery(GET_ALL_BIKES);
+    const { loading: loadingBikeStores, error: errorBikeStores, data: bikeStoresData } = useQuery(GET_ALL_BIKESTORES);
+
+    useEffect(() => {
+        if (bikesData) {
+            setselectableBikes(bikesData?.getBikes.map((bike) => ({
+                value: bike.id,
+                label: bike.model,
+                image: bike.imageURL,
+                pricetag: bike.pricetag
+            })) || []);
+        }
+    }, [bikesData]);
+
+    useEffect(() => {
+        if (bikeStoresData) {
+            const stores = bikeStoresData.getBikeStores;
+            const cities = [...new Set(stores.map((store) => store.city))];
+            setListOfStores(stores.map((store) => ({ label: store.name, value: store.id })));
+            setListOfCities(cities);
+            setnewMarkers(stores.map((store) => ({
+                id: store.id,
+                name: store.name,
+                city: store.city,
+                coordinates: {
+                    lat: parseFloat(store.lat),
+                    lng: parseFloat(store.lng),
+                },
+            })))
+        }
+    }, [bikeStoresData]);
+
+    if (loadingBikeStores || loadingBikes) return <p>Loading...</p>;
+    if (errorBikes) return <p>Error errorBikes :(</p>;
+    if (errorBikeStores) return <p>Error errorBikeStores :(</p>;
 
     return (
         <div>
+                      <Elements stripe={stripePromise}>
+
             <div className="flex items-center justify-center p-5">
                 <div className="block w-5/6">
-                    <HorizontalLinearStepper activeStep={activeStep} setActiveStep={setActiveStep} />
+                    <HorizontalLinearStepper
+                        activeStep={activeStep}
+                        setActiveStep={setActiveStep}
+                        markers={newMarkers}
+                        listOfCities={listOfCities}
+                        listOfStores={listOfStores}
+                        selectableBikes={selectableBikes} />
                 </div>
             </div>
+            </Elements>
         </div>
     );
 }
-
-function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelectedStore, selectedStoreId, setSelectedStoreId }) {
-    const [listOfCities, setListOfCities] = useState({});
-    const [listOfStores, setListOfStores] = useState({});
+function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelectedStore, selectedStoreId, setSelectedStoreId, markers, listOfCities, listOfStores }) {
 
     const handleCityChange = (event, value) => {
         setSelectedCity(value);
@@ -56,29 +155,6 @@ function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelec
 
     //map zeug
 
-    const [markers, setMarkers] = useState([]);
-
-    const GET_ALL_BIKESTORES = gql`
-      query {
-        getBikeStores {
-          id
-          name
-          street
-          city
-          state
-          zip
-          phone
-          email
-          lat
-          lng
-        }
-      }
-    `;
-
-    const { loading, error, data, refetch } = useQuery(GET_ALL_BIKESTORES, {
-        skip: true,
-    });
-
     const handleMarkerClick = (marker) => {
         if (marker.city !== selectedCity) {
             setSelectedCity(marker.city);
@@ -89,29 +165,6 @@ function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelec
             console.log(marker.id)
         }
     };
-    useEffect(() => {
-        const fetchData = async () => {
-            const result = await refetch();
-            const stores = result.data.getBikeStores;
-            const cities = [...new Set(stores.map((store) => store.city))];
-
-            setListOfStores(result.data.getBikeStores.map((store) => ({ label: store.name, value: store.id })));
-            setListOfCities(cities);
-
-            const newMarkers = stores.map((store) => ({
-                id: store.id,
-                name: store.name,
-                city: store.city,
-                coordinates: {
-                    lat: parseFloat(store.lat),
-                    lng: parseFloat(store.lng),
-                },
-            }));
-
-            setMarkers(newMarkers);
-        };
-        fetchData();
-    }, [refetch]);
 
     const center = {
         lat: 49.488888,
@@ -193,39 +246,18 @@ function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelec
         </div>
     )
 }
-function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues, fromDate, setFromDate, toDate, setToDate }) {
+function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues, fromDate, setFromDate, toDate, setToDate, selectableBikes }) {
 
-    const GET_ALL_BIKES = gql`
-    query {
-        getBikes {
-            id
-            type
-            brand
-            model 
-            year 
-            color 
-            price
-            description
-            rented
-            bikeStore
-            imageURL
-            pricetag
-      }
-    }
-  `;
-    const { loading, error, data } = useQuery(GET_ALL_BIKES);
-    console.log(data)
-    const options = data?.getBikes.map((bike) => ({
-        value: bike.id,
-        label: bike.model,
-        image: bike.imageURL,
-    })) || [];
+
+    const options = selectableBikes;
 
     const handleAddField = () => {
-        setFields([...fields, { id: Date.now(), value: "" }]);
-        setSelectedOptions({ ...selectedOptions, [fields.length]: options[0].value });
-        setInputValues({ ...inputValues, [fields.length]: "" });
-    };
+        const newId = fields.length > 0 ? fields[fields.length - 1].id + 1 : 1;
+        setFields([...fields, { id: newId, value: "" }]);
+        setSelectedOptions({ ...selectedOptions, [newId]: options[0].value });
+        setInputValues({ ...inputValues, [newId]: "" });
+      };
+      
 
     const handleDeleteField = (id) => {
         const newFields = fields.filter((field) => field.id !== id);
@@ -278,7 +310,7 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
                     }}>
                         <BikeSelectionItem
                             id={field.id}
-                            selectedOption={selectedOptions[field.id] || 'option1'} // hier wird 'option1' als Default-Wert gesetzt
+                            selectedOption={selectedOptions[field.id] || (options.length > 0 ? options[0].value : null)}
                             setSelectedOption={handleOptionChange}
                             inputValue={inputValues[field.id]}
                             setInputValue={handleInputChange}
@@ -288,6 +320,7 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
                             toDate={toDate}
                             setToDate={handleToDateChange}
                         />
+
                         <Button
                             variant="outlined"
                             color="error"
@@ -370,7 +403,8 @@ function BikeSelectionItem({ id, selectedOption, setSelectedOption, inputValue, 
         </div>
     );
 }
-function UserLogin() {
+function UserLogin({ customerId, setcustomerId }) {
+    const [errorMessage, setErrorMessage] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [formData, setFormData] = useState({
@@ -397,13 +431,160 @@ function UserLogin() {
     };
 
     const handleLoginClick = () => {
-        // handle login button click event
+        setcustomerId("642d151b212acfeef285ade1");
+        // // Validierung der Daten
+        // if (formData.email === '' || !formData.email.includes('@')) {
+        //     setErrorMessage('Ungültige E-Mail-Adresse');
+        //     return;
+        // }
+        // if (formData.phone === '' || !formData.phone.match(/^\d{10}$/)) {
+        //     setErrorMessage('Ungültige Telefonnummer');
+        //     return;
+        // }
+        // if (formData.zip === '' || !formData.zip.match(/^\d{5}$/)) {
+        //     setErrorMessage('Ungültige Postleitzahl');
+        //     return;
+        // }
+        // // Wenn die Validierung erfolgreich war, setze die Fehlermeldung zurück und fahre fort
+        // setErrorMessage('');
+        // // ...
     };
+
+    const handleConfirmClick = () => {
+        let errors = [];
+
+        // Check if all form fields are filled
+        Object.entries(formData).forEach(([key, value]) => {
+            if (!value) {
+                errors.push(`${key} is required`);
+            }
+        });
+
+        if (errors.length > 0) {
+            setErrorMessage(errors.join('\n;'));
+        } else {
+            setErrorMessage(null);
+            // Proceed with form submission
+            checkCustomerExists(formData);
+        }
+    };
+
+    const getCustomersQuery = gql`
+      query {
+        getCustomers {
+          id
+          firstname
+          lastname
+          email
+          phone
+          street
+          city
+          state
+          zip
+          rentals{
+            id
+          }
+        }
+      }`;
+
+    const addCustomerMutation = gql`
+      mutation($firstname: String!, $lastname: String!, $email: String!, $phone: String!, $street: String!, $city: String!, $state: String!, $zip: String!) {
+        addCustomer(input: {
+          firstname: $firstname,
+          lastname: $lastname,
+          email: $email,
+          phone: $phone,
+          street: $street,
+          city: $city,
+          state: $state,
+          zip: $zip
+        }) {
+          id
+          firstname
+          lastname
+          email
+          phone
+          street
+          city
+          state
+          zip
+        }
+      }
+    `;
+    const { loading, error, data } = useQuery(getCustomersQuery);
+    const [addCustomer] = useMutation(addCustomerMutation);
+
+    const checkCustomerExists = (formData) => {
+        console.log(data.getCustomers)
+        const customer = data.getCustomers.find(
+            (customer) =>
+                customer.firstname == formData.firstname &&
+                customer.lastname == formData.lastname &&
+                customer.email == formData.email &&
+                customer.phone == formData.phone &&
+                customer.street == formData.street &&
+                customer.city == formData.city &&
+                customer.state == formData.state &&
+                customer.zip == formData.zip
+        );
+
+        if (customer) {
+            console.log('Customer exists with id:', customer.id);
+            setcustomerId(customer.id);
+            // hier die weitere Verarbeitung mit der vorhandenen customerId
+        } else {
+            addCustomer({
+                variables: {
+                    firstname: formData.firstname,
+                    lastname: formData.firstname,
+                    email: formData.firstname,
+                    phone: formData.firstname,
+                    street: formData.firstname,
+                    city: formData.firstname,
+                    state: formData.firstname,
+                    zip: formData.firstname
+                },
+                refetchQueries: [{ query: getCustomersQuery }],
+            })
+                .then(({ data }) => {
+                    console.log('Customer added with id:', data.addCustomer.id);
+                    setcustomerId(data.addCustomer.id);
+                    // hier die weitere Verarbeitung mit der neuen customerId
+                })
+                .catch((error) => console.log(error));
+        }
+    };
+
 
     return (
         <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
             <Grid container spacing={2}>
+                <Grid item xs={12}>
+                    {errorMessage && (
+                        <Grid container justifyContent="left" sx={{ mb: 2 }}>
+                            <Grid item xs={12} sm={8} md={6}>
+                                <Alert severity="error" sx={{ justifyContent: 'flex-start' }}>
+                                    {errorMessage}
+                                </Alert>
+                            </Grid>
+                        </Grid>
+                    )}
+                </Grid>
+                <Grid item xs={12}>
+                    {customerId && (
+                        <Grid container justifyContent="left" sx={{ mb: 2 }}>
+                            <Grid item xs={12} sm={8} md={6}>
+                                <Alert severity="success" sx={{ justifyContent: 'flex-start' }}>This is a success alert — check it out!</Alert>
+                            </Grid>
+                        </Grid>
+                    )}
+                </Grid>
                 <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="h5" component="h2" gutterBottom>
+                            Melde dich an ...
+                        </Typography>
+                    </Box>
                     <Paper elevation={3} sx={{ p: 2 }}>
                         <Box sx={{ mb: 2 }}>
                             <TextField
@@ -430,6 +611,11 @@ function UserLogin() {
                     </Paper>
                 </Grid>
                 <Grid item xs={12} md={6}>
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="h5" component="h2" gutterBottom>
+                            ... oder gib deine Daten direkt hier an
+                        </Typography>
+                    </Box>
                     <Paper elevation={3} sx={{ p: 2 }}>
                         <Box sx={{ mb: 2 }}>
                             <TextField
@@ -503,94 +689,98 @@ function UserLogin() {
                                 onChange={handleFormDataChange}
                             />
                         </Box>
+                        <Button variant="contained" fullWidth onClick={handleConfirmClick}>
+                            <p className="text-black">
+                                Bestätigen
+                            </p>
+                        </Button>
                     </Paper>
                 </Grid>
             </Grid>
         </Box>
     );
 }
-function PaymentPage() {
-    return (
-        <div>
-            <Box sx={{ p: 2, borderRadius: 1, boxShadow: 1 }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                    Zahlungsmethoden
-                </Typography>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                border: 1,
-                                borderRadius: 1,
-                                p: 2,
-                            }}
-                        >
-                            <CreditCard sx={{ fontSize: 48, mr: 2 }} />
-                            <Typography variant="subtitle1">Kreditkarte</Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                border: 1,
-                                borderRadius: 1,
-                                p: 2,
-                            }}
-                        >
-                            <Payment sx={{ fontSize: 48, mr: 2 }} />
-                            <Typography variant="subtitle1">PayPal</Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                border: 1,
-                                borderRadius: 1,
-                                p: 2,
-                            }}
-                        >
-                            <MonetizationOn sx={{ fontSize: 48, mr: 2 }} />
-                            <Typography variant="subtitle1">Überweisung</Typography>
-                        </Box>
-                    </Grid>
-                </Grid>
-            </Box>
-        </div>
-    );
-}
-const ADD_ORDER = gql`
-  mutation AddOrder($input: OrderInput!) {
-    addOrder(input: $input) {
-          customer
-          bike
-          date
-          price
+function PaymentPage({ fields, selectedOptions, selectableBikes, customerId, fromDate, toDate, handleAddOrder}) {
+    const bikeOrders = fields.map((field) => {
+      const bike = selectableBikes.find((bike) => bike.value === selectedOptions[field.id]);
+      const startDate = field.fromDate;
+      const endDate = field.toDate;
+      return { bike, startDate, endDate };
+    });
+  
+    const total = bikeOrders.length * 50;
+    const bookedBikesToPushIntern = [];
+    for (const key in selectedOptions) {
+            bookedBikesToPushIntern.push({
+                bike: selectedOptions[key],
+                customer: customerId,
+                date_from: fromDate.toISOString(),
+                date_to: toDate.toISOString(),
+                price: 20
+            })
     }
-  }
-`;
-import { useRouter } from "next/navigation";
-function HorizontalLinearStepper({ activeStep, setActiveStep }) {
+    const stripe = useStripe();
+  
+    const handleCheckoutClick = async () => {
+
+        await handleAddOrder()
+      const { error } = await stripe.redirectToCheckout({
+        lineItems: 
+        [
+          { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: bookedBikesToPushIntern.length }
+        ],
+        mode: 'payment',
+        successUrl: 'http://localhost:3000/bookingConfirmation',
+        cancelUrl: 'https://example.com/cancel',
+      });
+      if (error) {
+        console.error(error);
+      }
+    };
+  
+    return (
+      <div>
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Order Summary
+          </Typography>
+          <List sx={{ mb: 2 }}>
+            {bikeOrders.map((order, index) => (
+              <ListItem key={index}>
+                <ListItemText
+                  primary={`${order.bike.label} - ${order.startDate} to ${order.endDate}`}
+                  secondary={<img src={order.bike.image} alt={order.bike.label} width="100" height="50" />}
+                />
+              </ListItem>
+            ))}
+          </List>
+          <Typography variant="h6">Total: ${total}</Typography>
+          <Elements stripe={stripePromise}>
+          <Button variant="contained" sx={{ mt: 2 }} onClick={handleCheckoutClick}>
+            <p className="text-black">Confirm and Pay</p>
+          </Button>
+          </Elements>
+        </Box>
+      </div>
+    );
+  }  
+
+function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCities, listOfStores, selectableBikes }) {
     const router = useRouter();
     const [username, setUsername] = useState({});
     const [password, setPassword] = useState({});
 
-    const [fields, setFields] = useState([{ id: Date.now(), value: "" }]);
+    const [fields, setFields] = useState([]);
 
-    const [selectedCity, setSelectedCity] = useState({});
-    const [selectedStore, setSelectedStore] = useState({});
+    const [selectedCity, setSelectedCity] = useState("");
+    const [selectedStore, setSelectedStore] = useState("");
 
     const [selectedOptions, setSelectedOptions] = useState({});
     const [inputValues, setInputValues] = useState({});
 
+    const [customerId, setcustomerId] = useState(null);
 
     const [selectedStoreId, setSelectedStoreId] = useState({});
-
 
 
     const [fromDate, setFromDate] = React.useState(dayjs('2023-03-06'));
@@ -602,8 +792,7 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
 
     const [addOrder, { loading, error, data }] = useMutation(ADD_ORDER);
 
-    const testId = "6430196df543f809796bbb1a";
-
+    const [bookedBikesToPush, setbookedBikesToPush] = useState("");
 
     const handleAddOrder = async () => {
         const output = {
@@ -614,48 +803,40 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
             toDate: toDate
 
         }
-        const customerId = "642d151b212acfeef285ade1";
-        const price = 100;
+        console.log(output)
 
-        const bookedBikes = [];
-        const bookedBikesToPush = [];
+        const bookedBikesToPushIntern = [];
         for (const key in selectedOptions) {
-          if (key > 100000) {
-
-            bookedBikesToPush.push({
-                bike: selectedOptions[key],
-                customer: customerId,
-                date: fromDate.toISOString(),
-                price: 20
-            })
-
-
-            // bookedBikes.push(selectedOptions[key]);
-          }
+                bookedBikesToPushIntern.push({
+                    bike: selectedOptions[key],
+                    customer: customerId,
+                    date_from: fromDate.toISOString(),
+                    date_to: toDate.toISOString(),
+                    price: 20
+                })
         }
-        
-        console.log(bookedBikesToPush)
+        setbookedBikesToPush(bookedBikesToPushIntern);
+        console.log(bookedBikesToPushIntern)
         try {
-            const promises = bookedBikesToPush.map((bookedBike) => {
-              return addOrder({
-                variables: {
-                  input: {
-                    bike: bookedBike.bike.id,
-                    customer: bookedBike.customer,
-                    date: bookedBike.date,
-                    price: bookedBike.price,
-                  },
-                },
-              });
+            const promises = bookedBikesToPushIntern.map((bookedBike) => {
+                return addOrder({
+                    variables: {
+                        input: {
+                            bike: bookedBike.bike,
+                            customer: bookedBike.customer,
+                            date: bookedBike.date_from,
+                            price: bookedBike.price.toString,
+                        },
+                    },
+                });
             });
             const results = await Promise.all(promises);
             console.log(results);
-            // Hier kannst du die Weiterleitung zur Bestätigungsseite vornehmen.
-          } catch (error) {
+        } catch (error) {
             console.error(error);
             handleReset();
-          }
-          
+        }
+
     };
 
     if (loading) return <p>Loading...</p>;
@@ -745,6 +926,9 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                                     setSelectedStore={setSelectedStore}
                                     selectedStoreId={selectedStoreId}
                                     setSelectedStoreId={setSelectedStoreId}
+                                    markers={markers}
+                                    listOfCities={listOfCities}
+                                    listOfStores={listOfStores}
                                 />
 
                             ) : activeStep == 1 ? (
@@ -759,12 +943,29 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                                     fromDate={fromDate}
                                     setFromDate={handleStartDateChange}
                                     toDate={toDate}
-                                    setToDate={handleToDateChange} />
+                                    setToDate={handleToDateChange}
+                                    selectableBikes={selectableBikes} />
                             ) : activeStep == 2 ? (
-                                <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
+                                <UserLogin
+                                    activeStep={activeStep}
+                                    username={username}
+                                    setUsername={setUsername}
+                                    password={password}
+                                    setPassword={setPassword}
+                                    customerId={customerId}
+                                    setcustomerId={setcustomerId} />
                             ) : (
 
-                                <PaymentPage />
+                                <PaymentPage 
+                                    fields={fields}
+                                    selectedOptions={selectedOptions}
+                                    selectableBikes={selectableBikes}
+                                    bookedBikesToPush={bookedBikesToPush}
+                                    customerId={customerId}
+                                    fromDate={fromDate}
+                                    toDate={toDate}
+                                    handleAddOrder={handleAddOrder}
+                                />
                             )}
                         </div>
                     </Typography>
@@ -786,7 +987,10 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                                     setSelectedCity={setSelectedCity}
                                     setSelectedStore={setSelectedStore}
                                     selectedStoreId={selectedStoreId}
-                                    setSelectedStoreId={setSelectedStoreId} />
+                                    setSelectedStoreId={setSelectedStoreId}
+                                    markers={markers}
+                                    listOfCities={listOfCities}
+                                    listOfStores={listOfStores} />
 
                             ) : activeStep == 1 ? (
                                 <BikeSelection
@@ -800,11 +1004,28 @@ function HorizontalLinearStepper({ activeStep, setActiveStep }) {
                                     fromDate={fromDate}
                                     setFromDate={setFromDate}
                                     toDate={toDate}
-                                    setToDate={setToDate} />
+                                    setToDate={setToDate}
+                                    selectableBikes={selectableBikes} />
                             ) : activeStep == 2 ? (
-                                <UserLogin activeStep={activeStep} username={username} setUsername={setUsername} password={password} setPassword={setPassword} />
+                                <UserLogin
+                                    activeStep={activeStep}
+                                    username={username}
+                                    setUsername={setUsername}
+                                    password={password}
+                                    setPassword={setPassword}
+                                    customerId={customerId}
+                                    setcustomerId={setcustomerId} />
                             ) : (
-                                <PaymentPage />
+                                <PaymentPage 
+                                    fields={fields}
+                                    selectedOptions={selectedOptions}
+                                    selectableBikes={selectableBikes}
+                                    bookedBikesToPush={bookedBikesToPush}
+                                    customerId={customerId}
+                                    fromDate={fromDate}
+                                    toDate={toDate}
+                                    handleAddOrder={handleAddOrder}
+                                />
                             )}
                         </div>
                     </Typography>

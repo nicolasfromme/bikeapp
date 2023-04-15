@@ -64,11 +64,11 @@ export const resolvers = {
     getCustomers: async (_, args) => {
       await connectMongo();
       const customers = await Customer.find({});
-      if (!costumers) {
+      if (!customers) {
         return [];
       }
       else {
-        return costumers;
+        return customers;
       }
     },
     getCustomer: async (_, args) => {
@@ -273,6 +273,7 @@ export const resolvers = {
     
     addOrder: async (_, args) => {
       await connectMongo();
+      console.log("Add Order")
       console.log(args)
       const bikeId = args.input.bike;
       if (!mongoose.Types.ObjectId.isValid(bikeId)) {

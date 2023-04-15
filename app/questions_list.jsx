@@ -54,8 +54,7 @@ export default function CustomizedAccordions() {
                                         '& .MuiAccordionSummaryExpandIconWrapper.MuiExpanded': {
                                             transform: 'rotate(90deg)',
                                         },
-                                    }}
-                                >
+                                    }}>
                                     <Typography className='font-bold ml-5 text-lg'>{item.title}</Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
