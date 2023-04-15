@@ -1,7 +1,11 @@
 import { Schema, model, models } from 'mongoose';
 
 const EmployeeSchema = new Schema({
-    name: {
+    firstname: {
+        type: String,
+        required: true,
+    },
+    lastname: {
         type: String,
         required: true,
     },
@@ -18,11 +22,11 @@ const EmployeeSchema = new Schema({
         required: true,
     },
     zip: {
-        type: Number,
+        type: String,
         required: true,
     },
     phone: {
-        type: Number,
+        type: String,
         required: true,
     },
     email: {

@@ -55,18 +55,20 @@ export const typeDefs = gql`
         firstname: String
         lastname: String
         email: String
-        phone: Int
+        phone: String
         street: String
         city: String
         state: String
-        zip: Int
+        zip: String
         store: BikeStore
         position: String
     }
     
     type Order {
+        id: ID!
         customer: ID!
-        bike: ID!
+        bike: String
+        bikeModel: String
         date: String!
         price: String!
     }
@@ -91,10 +93,11 @@ export const typeDefs = gql`
         street: String!
         city: String!
         state: String!
-        zip: Int!
-        phone: Int!
+        zip: String!
+        phone: String!
         email: String!
         location: LocationInput!
+        employee: employeeInput!
     }
 
     input BikeInput {
@@ -125,12 +128,13 @@ export const typeDefs = gql`
     input employeeInput {
         firstname: String!
         email: String!
-        phone: Int!
+        phone: String!
         street: String!
         city: String!
         state: String!
-        zip: Int!
-        store: ID!
+        zip: String!
+        storeId: ID
+        storeName: String
         position: String!
         lastname: String!
     }
@@ -147,7 +151,7 @@ export const typeDefs = gql`
 
     input OrderInput {
         customer: ID!
-        bike: ID!
+        bikeModel: String!
         date: String!
         price: String!
     }
@@ -200,5 +204,5 @@ export const typeDefs = gql`
 
         getBikesByStore(storeId: ID!): [Bike]
         getOrdersByStore(storeId: ID!): [Order]
-        getOrdersByCustomer(customerId: ID!): [Order]
+        getOrdersByCustomer(customerId: String!): [Order]
     }`
