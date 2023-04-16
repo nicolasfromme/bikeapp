@@ -16,7 +16,11 @@ import MenuItem from '@mui/material/MenuItem';
 import Image from 'next/image';
 
 const pages = ['Fahrräder', 'Stores', 'Buchung'];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = ['Konto', 'Dashboard', 'Logout'];
+
+function openLinkInSameTab(url) {
+  window.location.href = url;
+}
 
 function AdbIcon(){
   return(
@@ -34,6 +38,7 @@ function AdbIcon(){
 }
 
 function ResponsiveAppBar() {
+
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
 
@@ -50,6 +55,14 @@ function ResponsiveAppBar() {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const handleSettingsClick = (event) => {
+    const { text } = event.target;
+    if (text === 'Konto') {
+      openLinkInSameTab('http://localhost:3000/profileoverview');
+    }
+    handleCloseUserMenu();
   };
 
   return (
@@ -146,7 +159,7 @@ function ResponsiveAppBar() {
 
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+              <IconButton onClick={() => openLinkInSameTab('http://localhost:3000/profileoverview')} sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
             </Tooltip>
@@ -167,7 +180,7 @@ function ResponsiveAppBar() {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem key={setting} onClick={handleSettingsClick}>
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}

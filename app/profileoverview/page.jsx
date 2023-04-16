@@ -234,7 +234,7 @@ function ResponsiveDrawer(props) {
 
   
   return (
-    <Box style={{ height: 'auto', padding: "30px"}}>
+    <Box style={{ height: 'auto', padding: "70px"}}>
       <CssBaseline />
       <AppBar
         position="auto"
