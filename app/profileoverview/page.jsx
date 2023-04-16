@@ -317,7 +317,7 @@ function ResponsiveDrawer(props) {
               <StyledTableCell component="th" scope="row">
                 {row.bestellung}
               </StyledTableCell>
-              <StyledTableCell align="right">{bike}</StyledTableCell>
+              <StyledTableCell align="right">FDSFJ551</StyledTableCell>
               <StyledTableCell align="right">{price}</StyledTableCell>
               <StyledTableCell align="right">{date}</StyledTableCell>
             </TableRow>

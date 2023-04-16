@@ -73,12 +73,12 @@ function Footer() {
             Rechtliches
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <Link href="#" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
+            <Link href="http://localhost:3000/datenschutz" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
               Datenschutz
             </Link>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <Link href="#" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
+            <Link href="http://localhost:3000/impressum" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
               Impressum
             </Link>
           </Typography>
