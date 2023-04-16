@@ -1,11 +1,23 @@
 "use client"
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { gql } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 //import client from "../../apolloclient";
 import { useRouter } from 'next/router';
 
 export default function Router({ role }) {
     const { user, error, isLoading } = useUser();
+    console.log("user: " + user)
+
+    const { data } = useQuery(gql`
+        {
+            getLoggedInUserRole(id: "auth0|63ffd2bd022bc051ed2785cc") {
+                role
+            }
+        }
+        `,
+    );
+    console.log(data)
+    console.log(data.getLoggedInUserRole.role)
 
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>{error.message}</div>;
@@ -27,6 +39,7 @@ export default function Router({ role }) {
         </div>
     )
 } 
+
 /*
 export async function getStaticProps() {
     const { data } = await client.query({

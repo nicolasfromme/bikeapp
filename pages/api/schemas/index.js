@@ -104,9 +104,9 @@ export const typeDefs = gql`
         type: String!
         brand: String!
         model: String!
-        year: Int!
+        year: String!
         color: String!
-        price: Int!
+        price: String!
         description: String!
         rented: Boolean!
         bikeStore: ID!

@@ -67,7 +67,7 @@ export default function Dashboard() {
                             <ListItemIcon>
                                 <AddIcon />
                             </ListItemIcon>
-                            <ListItemText primary={"Add Employee"} />
+                            <ListItemText primary={"Add Store"} />
                             </ListItemButton>
                         </ListItem>
                     </List>
@@ -148,8 +148,6 @@ function AddEmployee() {
             }
         }
     `)
-
-   
 
     const handleChange = (evt) => {
         const value = evt.target.value;
@@ -249,6 +247,15 @@ function StoreData({ storeId }) {
                 price
             } getEmployeesByStore(storeId: "${storeId}") {
                 id
+                firstname
+                lastname
+                email
+                phone
+                street
+                city
+                state
+                zip
+                position
             }
         }
     `)
@@ -297,12 +304,12 @@ function StoreData({ storeId }) {
 
             <Typography>Orders made in this store: </Typography>
             <div style={{ height: 300, width: '100%' }}>
-                <DataGrid rows={data.getBikesByStore} columns={columns_orders} pageSize={5} />
+                <DataGrid rows={data.getOrdersByStore} columns={columns_orders} pageSize={5} />
             </div>
 
             <Typography>Employees working in this store: </Typography>
             <div style={{ height: 300, width: '100%' }}>
-                <DataGrid rows={data.getBikesByStore} columns={columns_employees} pageSize={5} />
+                <DataGrid rows={data.getEmployeesByStore} columns={columns_employees} pageSize={5} />
             </div>
         </Box>
     )
