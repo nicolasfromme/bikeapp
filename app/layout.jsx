@@ -3,6 +3,7 @@ import './globals.css'
 import ResponsiveAppBar from './responsive_header'
 import { AppBar, Box, Grid, Link, Typography } from '@mui/material';
 import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
+import { UserProvider } from '@auth0/nextjs-auth0/client';
 export default function RootLayout({ children }) {
 
   const client = new ApolloClient({
@@ -14,6 +15,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body >
         <Box sx={{display: "flex", minHeight: "100vh", backgroundColor: "#000"}}>
+        <UserProvider>
         <ApolloProvider client={client}>
         <ResponsiveAppBar className='text-black' ></ResponsiveAppBar>
         <Box className='bg-white' sx={{ maxWidth: '2100px', flexGrow: "1", margin: '0 auto' }}>
@@ -24,6 +26,7 @@ export default function RootLayout({ children }) {
         </Box>
         <Footer />
         </ApolloProvider>
+        </UserProvider>
         </Box>
       </body>
     </html>

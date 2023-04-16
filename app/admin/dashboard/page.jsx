@@ -67,7 +67,7 @@ export default function Dashboard() {
                             <ListItemIcon>
                                 <AddIcon />
                             </ListItemIcon>
-                            <ListItemText primary={"Add Employee"} />
+                            <ListItemText primary={"Add Store"} />
                             </ListItemButton>
                         </ListItem>
                     </List>

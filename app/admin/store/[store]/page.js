@@ -4,8 +4,11 @@ import { useState } from "react";
 import { Box, Drawer, ListItem, List, Toolbar, ListItemButton, ListItemIcon, Button, ListItemText, Divider, Typography, FormGroup, TextField } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AddIcon from "@mui/icons-material/Add";
+import PeopleIcon from '@mui/icons-material/People';
+import BikeScooterIcon from '@mui/icons-material/BikeScooter';
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { DataGrid } from "@mui/x-data-grid"
+
 
 
 export default function StoreDashboard() {
@@ -35,7 +38,7 @@ export default function StoreDashboard() {
                         <ListItem key={"Bikes"}>
                             <ListItemButton selected={selectedItem === "Bikes"} onClick={() => setSelectedItem("Bikes")}>
                             <ListItemIcon>
-                                <TrendingUpIcon />
+                                <BikeScooterIcon />
                             </ListItemIcon>
                             <ListItemText primary={"Show Bikes"} />
                             </ListItemButton>
@@ -57,7 +60,7 @@ export default function StoreDashboard() {
                         <ListItem key={"Show Employees"} >
                             <ListItemButton selected={selectedItem === "Show Employees"} onClick={() => handleBarChange("Show Employees")}>
                             <ListItemIcon>
-                                <AddIcon />
+                                <PeopleIcon />
                             </ListItemIcon>
                             <ListItemText primary={"Show Employees"} />
                             </ListItemButton>

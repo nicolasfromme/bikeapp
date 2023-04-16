@@ -196,6 +196,7 @@ export const resolvers = {
   Mutation: {
     addBikeStore: async (_, args) => {
       await connectMongo();
+      console.log(args.input)
       const bikeStore = new BikeStore({
         name: args.input.name,
         street: args.input.street,
@@ -204,8 +205,8 @@ export const resolvers = {
         zip: args.input.zip,
         phone: args.input.phone,
         email: args.input.email,
-        lat: args.input.lat,
-        long: args.input.long,
+        lat: args.input.location.lat,
+        lng: args.input.location.long,
       });
       await bikeStore.save();
       console.log(args.input)
