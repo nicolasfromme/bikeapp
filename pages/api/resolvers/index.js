@@ -268,7 +268,8 @@ export const resolvers = {
         phone: args.input.phone,
         email: args.input.email,
         position: args.input.position,
-        store: args.input.store
+        store: args.input.store,
+        storeId: args.input.storeId
       });
       await employee.save();
       return employee;

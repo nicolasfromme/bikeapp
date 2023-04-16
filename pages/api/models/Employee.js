@@ -34,9 +34,12 @@ const EmployeeSchema = new Schema({
         required: true,
     },
     store: {
+        type: String,
+    },
+    storeId: {
         type: Schema.Types.ObjectId,
         ref: 'BikeStore',
-    },
+    }
 });
 
 const Employee = models.Employee || model('Employee', EmployeeSchema);

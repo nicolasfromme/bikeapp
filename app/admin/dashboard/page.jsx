@@ -149,8 +149,6 @@ function AddEmployee() {
         }
     `)
 
-   
-
     const handleChange = (evt) => {
         const value = evt.target.value;
         setStoreData({

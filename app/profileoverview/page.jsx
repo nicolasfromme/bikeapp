@@ -114,7 +114,7 @@ function ResponsiveDrawer(props) {
   }
   
   const rows = [
-    createData("1", "...", "...", data.getOrdersByCustomer.price, "..."),
+    createData("1", "...", "...", "", "..."),
     createData("2", "...", "...","...", "..."),
     createData("3", "...", "...", "...", "..."),
     createData('',"-","-","-", "-"),
@@ -122,7 +122,6 @@ function ResponsiveDrawer(props) {
   ];
 
   
-  console.log(data)
   useEffect(() => {
     if (data) {
       setVorname(data.getCustomer.firstname);
@@ -134,7 +133,7 @@ function ResponsiveDrawer(props) {
     }
   }, [data]);
 
-  if (loading) return <div>Loading...</div>
+  //if (loading) return <div>Loading...</div>
 
   const handleEdit = () => {
     setIsEditable(true);
