@@ -1,14 +1,14 @@
 import { Schema, model, models } from 'mongoose';
 
 const OrderSchema = new Schema({
+    bike: {
+        type: Schema.Types.ObjectId,
+        ref: 'Bike',
+        required: true,
+    },
     customer: {
         type: Schema.Types.ObjectId,
         ref: 'Customer',
-        required: true,
-    },
-    bike: {
-        type: String,
-        ref: 'Bike',
         required: true,
     },
     date: {

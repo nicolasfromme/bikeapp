@@ -1,9 +1,8 @@
 "use client"
 import './globals.css'
 import ResponsiveAppBar from './responsive_header'
-import { AppBar, Box, Grid, Link, Typography } from '@mui/material';
+import { Box, Grid, Link, Typography } from '@mui/material';
 import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
-import { UserProvider } from '@auth0/nextjs-auth0/client';
 export default function RootLayout({ children }) {
 
   const client = new ApolloClient({
@@ -14,20 +13,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body >
-        <Box sx={{display: "flex", minHeight: "100vh", backgroundColor: "#000"}}>
-        <UserProvider>
         <ApolloProvider client={client}>
         <ResponsiveAppBar className='text-black' ></ResponsiveAppBar>
-        <Box className='bg-white' sx={{ maxWidth: '2100px', flexGrow: "1", margin: '0 auto' }}>
+        <Box className='bg-white' sx={{ maxWidth: '2100px', margin: '0 auto' }}>
 
           {children}
 
-          
+          <Footer />
         </Box>
-        <Footer />
         </ApolloProvider>
-        </UserProvider>
-        </Box>
       </body>
     </html>
   )
@@ -36,7 +30,7 @@ export default function RootLayout({ children }) {
 
 function Footer() {
   return (
-    <Box sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, marginTop: "auto", position: "fixed", bottom: "-0px", width: "100%", bgcolor: '#121212', color: '#fff', py: 6 }}>
+    <Box sx={{ bgcolor: '#121212', color: '#fff', py: 6 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Typography variant="h6" gutterBottom>
@@ -73,12 +67,12 @@ function Footer() {
             Rechtliches
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <Link href="http://localhost:3000/datenschutz" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
+          <Link href="http://localhost:3000/datenschutz" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
               Datenschutz
             </Link>
           </Typography>
           <Typography variant="body1" gutterBottom>
-            <Link href="http://localhost:3000/impressum" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
+          <Link href="http://localhost:3000/impressum" sx={{ color: '#fff', '&:hover': { color: '#fff' } }}>
               Impressum
             </Link>
           </Typography>

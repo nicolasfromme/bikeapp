@@ -151,7 +151,8 @@ export const typeDefs = gql`
 
     input OrderInput {
         customer: ID!
-        bikeModel: String!
+        bike: String
+        bikeModel: String
         date: String!
         price: String!
     }

@@ -8,7 +8,7 @@ import { pink } from '@mui/material/colors';
 import Link from 'next/link';
 import CheckIcon from '@mui/icons-material/Check';
 import Image from 'next/image';
-import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
+import Grid from '@mui/material/Unstable_Grid2';
 import Button from '@mui/material/Button';
 import PedalBikeIcon from '@mui/icons-material/PedalBike';
 import SearchIcon from '@mui/icons-material/Search';
@@ -21,7 +21,7 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
 
   return (
-    <main >
+    <main className='pt-16'>
       <div className='w-full static'
         style={{
           backgroundImage: 'url("/mainpage.jpg")',

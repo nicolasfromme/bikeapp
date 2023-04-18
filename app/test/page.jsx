@@ -11,102 +11,50 @@ import { useState, useEffect } from "react";
 import { Autocomplete } from "@mui/material";
 import { useQuery, gql } from "@apollo/client";
 
-const GET_ALL_BIKESTORES = gql`
-  query {
-    getBikeStores {
+import { useMutation } from '@apollo/client';
+
+
+const ADD_ORDER = gql`
+  mutation AddOrder($input: OrderInput!) {
+    addOrder(input: $input) {
       id
-      name
+      customer
+      bike
+      date
+      price
     }
   }
 `;
 
-function StoreAutocomplete() {
-  const [storeOptions, setStoreOptions] = useState([]);
-  const [selectedStore, setSelectedStore] = useState(null);
-  const [selectedStoreId, setSelectedStoreId] = useState(null);
+export default function MyComponent() {
+  const [addOrder, { data, loading, error }] = useMutation(ADD_ORDER);
 
-  const { loading, error, data } = useQuery(GET_ALL_BIKESTORES);
+  const orderInput = [
+    {
+      bike: '64349409f502a87b8a8771d7',
+      customer: '642d151b212acfeef285ade1',
+      date: '2023-03-05T23:00:00.000Z',
+      price: '20',
+    },
+    {
+      bike: '64349409f502a87b8a8771d7',
+      customer: '642d151b212acfeef285ade1',
+      date: '2023-03-05T23:00:00.000Z',
+      price: '20',
+    },
+  ];
 
-  useEffect(() => {
-    if (data) {
-      setStoreOptions(data.getBikeStores.map((store) => ({ label: store.name, value: store.id })));
-    }
-  }, [data]);
-
-  const handleStoreChange = (event, value) => {
-    if (value) {
-      setSelectedStore(value.label);
-      setSelectedStoreId(value.value);
-      console.log(selectedStoreId)
-    } else {
-      setSelectedStore(null);
-      setSelectedStoreId(null);
-    }
+  const handleAddOrders = async () => {
+    const promises = orderInput.map((input) => addOrder({ variables: { input } }));
+    await Promise.all(promises);
   };
 
   return (
-    <Autocomplete
-      disablePortal
-      id="store-autocomplete"
-      options={storeOptions}
-      value={selectedStore}
-      onChange={handleStoreChange}
-      //getOptionLabel={(option) => option.label}
-      renderInput={(params) => <TextField {...params} label="Select a store" />}
-    />
+    <div className='pt-20'>
+      <button onClick={handleAddOrders}>Bestellungen aufgeben</button>
+      {loading && <p>Lade...</p>}
+      {error && <p>Fehler: {error.message}</p>}
+      {data && <p>Bestellungen erfolgreich aufgegeben!</p>}
+    </div>
   );
 }
-
-export default StoreAutocomplete;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-const Payment = () => {
-  const stripe = useStripe();
-
-  const handleCheckoutClick = async () => {
-    const { error } = await stripe.redirectToCheckout({
-      lineItems: [
-        { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: 4 }
-      ],
-      mode: 'payment',
-      successUrl: 'https://example.com/success',
-      cancelUrl: 'https://example.com/cancel',
-    });
-    if (error) {
-      console.error(error);
-    }
-  };
-
-  return (
-      <Button variant="contained" onClick={handleCheckoutClick}>
-        Checkout
-      </Button>
-  );
-};
-
-function test(){
-  return(
-    <div>
-    <Elements stripe={stripePromise}>
-      <Payment/>
-    </Elements>
-    </div>
-  )
-};

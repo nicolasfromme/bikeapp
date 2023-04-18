@@ -1,22 +1,15 @@
 "use client"
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { GoogleMap, useLoadScript, MarkerF } from "@react-google-maps/api";
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
-import { pink } from '@mui/material/colors';
 import { gql, useMutation } from "@apollo/client";
-import { Divider, Grid, Box, TextField, Button, Paper, FormControlLabel, Radio, RadioGroup, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { Grid, Box, TextField, Button, Paper, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import Image from "next/image";
-import { CreditCard, Payment, MonetizationOn } from "@mui/icons-material";
-import { use } from 'react';
-import { getClient } from "app/apolloclient";
-
-import { makeStyles } from '@material-ui/core/styles';
-
-import {  List, ListItem, ListItemText } from '@material-ui/core';
+import { List, ListItem, ListItemText } from '@material-ui/core';
 import { useRouter } from "next/navigation";
 import dayjs, { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -24,14 +17,9 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Alert from '@mui/material/Alert';
 import { useQuery } from '@apollo/client';
-
-
 import { loadStripe } from '@stripe/stripe-js';
 import { useStripe } from '@stripe/react-stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-
-
-
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -70,10 +58,11 @@ query {
 const ADD_ORDER = gql`
   mutation AddOrder($input: OrderInput!) {
     addOrder(input: $input) {
-          customer
-          bike
-          date
-          price
+      id
+      customer
+      bike
+      date
+      price
     }
   }
 `;
@@ -84,8 +73,8 @@ export default function Booking() {
     const [listOfCities, setListOfCities] = useState({});
     const [listOfStores, setListOfStores] = useState({});
     const [selectableBikes, setselectableBikes] = useState([]);
-
     const [newMarkers, setnewMarkers] = useState({});
+
     //database accces
     const { loading: loadingBikes, error: errorBikes, data: bikesData } = useQuery(GET_ALL_BIKES);
     const { loading: loadingBikeStores, error: errorBikeStores, data: bikeStoresData } = useQuery(GET_ALL_BIKESTORES);
@@ -96,6 +85,7 @@ export default function Booking() {
                 value: bike.id,
                 label: bike.model,
                 image: bike.imageURL,
+                price: bike.price,
                 pricetag: bike.pricetag
             })) || []);
         }
@@ -124,20 +114,19 @@ export default function Booking() {
     if (errorBikeStores) return <p>Error errorBikeStores :(</p>;
 
     return (
-        <div>
-                      <Elements stripe={stripePromise}>
-
-            <div className="flex items-center justify-center p-5">
-                <div className="block w-5/6">
-                    <HorizontalLinearStepper
-                        activeStep={activeStep}
-                        setActiveStep={setActiveStep}
-                        markers={newMarkers}
-                        listOfCities={listOfCities}
-                        listOfStores={listOfStores}
-                        selectableBikes={selectableBikes} />
+        <div className="pt-20">
+            <Elements stripe={stripePromise}>
+                <div className="flex items-center justify-center p-5">
+                    <div className="block w-5/6">
+                        <HorizontalLinearStepper
+                            activeStep={activeStep}
+                            setActiveStep={setActiveStep}
+                            markers={newMarkers}
+                            listOfCities={listOfCities}
+                            listOfStores={listOfStores}
+                            selectableBikes={selectableBikes} />
+                    </div>
                 </div>
-            </div>
             </Elements>
         </div>
     );
@@ -248,7 +237,6 @@ function StoreSelection({ selectedCity, selectedStore, setSelectedCity, setSelec
 }
 function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions, inputValues, setInputValues, fromDate, setFromDate, toDate, setToDate, selectableBikes }) {
 
-
     const options = selectableBikes;
 
     const handleAddField = () => {
@@ -256,8 +244,8 @@ function BikeSelection({ fields, setFields, selectedOptions, setSelectedOptions,
         setFields([...fields, { id: newId, value: "" }]);
         setSelectedOptions({ ...selectedOptions, [newId]: options[0].value });
         setInputValues({ ...inputValues, [newId]: "" });
-      };
-      
+    };
+
 
     const handleDeleteField = (id) => {
         const newFields = fields.filter((field) => field.id !== id);
@@ -700,70 +688,72 @@ function UserLogin({ customerId, setcustomerId }) {
         </Box>
     );
 }
-function PaymentPage({ fields, selectedOptions, selectableBikes, customerId, fromDate, toDate, handleAddOrder}) {
+function PaymentPage({ fields, selectedOptions, selectableBikes, customerId, fromDate, toDate, handleAddOrder }) {
+    let total = 0;
     const bikeOrders = fields.map((field) => {
-      const bike = selectableBikes.find((bike) => bike.value === selectedOptions[field.id]);
-      const startDate = field.fromDate;
-      const endDate = field.toDate;
-      return { bike, startDate, endDate };
+        total = total + parseInt(selectableBikes.find((bike) => bike.value === selectedOptions[field.id]).price)
+
+        const bike = selectableBikes.find((bike) => bike.value === selectedOptions[field.id]);
+        const startDate =  new Date(fromDate).toLocaleDateString('de-DE');
+        const endDate = new Date(toDate).toLocaleDateString('de-DE');;
+        return { bike, startDate, endDate };
     });
-  
-    const total = bikeOrders.length * 50;
+
     const bookedBikesToPushIntern = [];
     for (const key in selectedOptions) {
-            bookedBikesToPushIntern.push({
-                bike: selectedOptions[key],
-                customer: customerId,
-                date_from: fromDate.toISOString(),
-                date_to: toDate.toISOString(),
-                price: 20
-            })
+        bookedBikesToPushIntern.push({
+            bike: selectedOptions[key],
+            customer: customerId,
+            date_from: fromDate.toISOString(),
+            date_to: toDate.toISOString(),
+            price: 20
+        })
     }
     const stripe = useStripe();
-  
+
     const handleCheckoutClick = async () => {
 
         await handleAddOrder()
-      const { error } = await stripe.redirectToCheckout({
-        lineItems: 
-        [
-          { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: bookedBikesToPushIntern.length }
-        ],
-        mode: 'payment',
-        successUrl: 'http://localhost:3000/bookingConfirmation',
-        cancelUrl: 'https://example.com/cancel',
-      });
-      if (error) {
-        console.error(error);
-      }
+        // const { error } = await stripe.redirectToCheckout({
+        //     lineItems:
+        //         [
+        //             { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: bookedBikesToPushIntern.length }
+        //         ],
+        //     mode: 'payment',
+        //     successUrl: 'http://localhost:3000/bookingConfirmation',
+        //     cancelUrl: 'https://example.com/cancel',
+        // });
+        // if (error) {
+        //     console.error(error);
+        // }
     };
-  
+
     return (
-      <div>
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Order Summary
-          </Typography>
-          <List sx={{ mb: 2 }}>
-            {bikeOrders.map((order, index) => (
-              <ListItem key={index}>
-                <ListItemText
-                  primary={`${order.bike.label} - ${order.startDate} to ${order.endDate}`}
-                  secondary={<img src={order.bike.image} alt={order.bike.label} width="100" height="50" />}
-                />
-              </ListItem>
-            ))}
-          </List>
-          <Typography variant="h6">Total: ${total}</Typography>
-          <Elements stripe={stripePromise}>
-          <Button variant="contained" sx={{ mt: 2 }} onClick={handleCheckoutClick}>
-            <p className="text-black">Confirm and Pay</p>
-          </Button>
-          </Elements>
-        </Box>
-      </div>
+        <div>
+            <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                    Order Summary
+                </Typography>
+                <List sx={{ mb: 2 }}>
+                    {bikeOrders.map((order, index) => (
+                        <ListItem key={index}>
+                            <ListItemText
+                                primary={`${order.bike.label} - ${order.startDate} to ${order.endDate}`}
+                                secondary={<img src={order.bike.image} alt={order.bike.label} width="100" height="50" />}
+                            />
+                        </ListItem>
+                    ))}
+                </List>
+                <Typography variant="h6">Total: ${total}</Typography>
+                <Elements stripe={stripePromise}>
+                    <Button variant="contained" sx={{ mt: 2 }} onClick={handleCheckoutClick}>
+                        <p className="text-black">Confirm and Pay</p>
+                    </Button>
+                </Elements>
+            </Box>
+        </div>
     );
-  }  
+}
 
 function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCities, listOfStores, selectableBikes }) {
     const router = useRouter();
@@ -790,7 +780,7 @@ function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCit
 
     const [skipped, setSkipped] = React.useState(new Set());
 
-    const [addOrder, { loading, error, data }] = useMutation(ADD_ORDER);
+    const [addOrder, { data, loading, error }] = useMutation(ADD_ORDER);
 
     const [bookedBikesToPush, setbookedBikesToPush] = useState("");
 
@@ -807,31 +797,19 @@ function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCit
 
         const bookedBikesToPushIntern = [];
         for (const key in selectedOptions) {
-                bookedBikesToPushIntern.push({
-                    bike: selectedOptions[key],
-                    customer: customerId,
-                    date_from: fromDate.toISOString(),
-                    date_to: toDate.toISOString(),
-                    price: 20
-                })
+            bookedBikesToPushIntern.push({
+                bike: selectedOptions[key],
+                customer: customerId,
+                date: fromDate.toISOString(),
+                price: "20"
+            })
         }
         setbookedBikesToPush(bookedBikesToPushIntern);
         console.log(bookedBikesToPushIntern)
+
         try {
-            const promises = bookedBikesToPushIntern.map((bookedBike) => {
-                return addOrder({
-                    variables: {
-                        input: {
-                            bike: bookedBike.bike,
-                            customer: bookedBike.customer,
-                            date: bookedBike.date_from,
-                            price: bookedBike.price.toString,
-                        },
-                    },
-                });
-            });
-            const results = await Promise.all(promises);
-            console.log(results);
+            const promises = bookedBikesToPushIntern.map((input) => addOrder({ variables: { input } }));
+            await Promise.all(promises);
         } catch (error) {
             console.error(error);
             handleReset();
@@ -956,7 +934,7 @@ function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCit
                                     setcustomerId={setcustomerId} />
                             ) : (
 
-                                <PaymentPage 
+                                <PaymentPage
                                     fields={fields}
                                     selectedOptions={selectedOptions}
                                     selectableBikes={selectableBikes}
@@ -1016,7 +994,7 @@ function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCit
                                     customerId={customerId}
                                     setcustomerId={setcustomerId} />
                             ) : (
-                                <PaymentPage 
+                                <PaymentPage
                                     fields={fields}
                                     selectedOptions={selectedOptions}
                                     selectableBikes={selectableBikes}
