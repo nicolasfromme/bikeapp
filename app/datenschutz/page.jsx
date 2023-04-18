@@ -9,6 +9,11 @@ export default function Datenschutz() {
             <div id="WholeText">
                 <div id="HeaderText">
                     <h1>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
                         <center>Datenschutz</center>
                     </h1>
                 </div>

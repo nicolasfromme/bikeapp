@@ -8,6 +8,11 @@ export default function Impressum() {
       <div id="WholeText">
         <div id="HeaderText">
           <h1>
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+            <br/>
             <center>Impressum</center>
           </h1>
         </div>
@@ -22,6 +27,7 @@ export default function Impressum() {
           <p>68199 Mannheim</p>
         </div>
         <div>
+        <br/>
         <br/>
           <h3>Kontaktaufnahme</h3>
         </div>
