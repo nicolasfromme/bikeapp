@@ -17,9 +17,9 @@ export default function Impressum() {
         </div>
         <br></br>
         <div id="Text">
-          <p>Fahrradvermietung Oberschicht </p>
-          <p>Preiserstr. 1 </p>
-          <p>68165 Mannheim</p>
+          <p>Bike Booking</p>
+          <p>Maxmustermannstr. 1 </p>
+          <p>68199 Mannheim</p>
         </div>
         <div>
         <br/>
