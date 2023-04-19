@@ -1,10 +1,10 @@
 "use client"
-import { useUser } from '@auth0/nextjs-auth0/client';
-import { gql, useQuery } from "@apollo/client";
+//import { useUser } from '@auth0/nextjs-auth0/client';
+//import { gql, useQuery } from "@apollo/client";
 //import client from "../../apolloclient";
-import { useRouter } from 'next/router';
 
 export default function Router({ role }) {
+    /*
     const { user, error, isLoading } = useUser();
     console.log("user: " + user)
 
@@ -22,7 +22,8 @@ export default function Router({ role }) {
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>{error.message}</div>;
     if (!user) return <div>Access Denied<a href="/api/auth/login">Login</a></div>;
-
+    
+    /*
     if(role === "Chef"){
         useRouter().push('/admin/dashboard')
     } else if(role === "employee"){
@@ -32,6 +33,7 @@ export default function Router({ role }) {
     } else if (role === "customer") {
         //route to customer dashboard
     } 
+    */
     
     return(
         <div>
