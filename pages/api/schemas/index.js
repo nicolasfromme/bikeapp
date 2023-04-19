@@ -71,6 +71,7 @@ export const typeDefs = gql`
         bikeModel: String
         date: String!
         price: String!
+        store: String
     }
 
     type loggedInUserRole {
@@ -155,6 +156,7 @@ export const typeDefs = gql`
         bikeModel: String
         date: String!
         price: String!
+        store: String
     }
     
     type Mutation {

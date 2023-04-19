@@ -19,6 +19,11 @@ const OrderSchema = new Schema({
         type: String,
         required: true,
     },
+    bikeStore: {
+        type: Schema.Types.ObjectId,
+        ref: 'Store',
+        required: false,
+    },
 });
 
 const Order = models.Order || model('Order', OrderSchema);
