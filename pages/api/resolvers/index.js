@@ -299,6 +299,7 @@ export const resolvers = {
         bike: new ObjectId(args.input.bike),
         date: args.input.date,
         price: args.input.price,
+        bikeStore: new ObjectId(args.input.store)
       });
       await order.save();
       // // Convert
