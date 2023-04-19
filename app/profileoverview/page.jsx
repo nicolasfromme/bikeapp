@@ -116,13 +116,24 @@ function ResponsiveDrawer(props) {
     return { bestellung, inhalt, eur, datum};
   }
   
-  const rows = [
+  const rows2 = [
     createData("1", "...", "...", "...", "..."),
     createData("2", "...", "...","...", "..."),
     createData("3", "...", "...", "...", "..."),
   ];
 
   
+  const [orders, setOrders] = React.useState([]);
+
+  const rows = orders.map((order, index) => {
+    return {
+      bestellung: index + 1,
+      bike: order.bike,
+      date: order.date,
+      price: order.price
+    };
+  });
+
   useEffect(() => {
     if (data) {
       setVorname(data.getCustomer.firstname);
@@ -131,9 +142,7 @@ function ResponsiveDrawer(props) {
       setOrt(data.getCustomer.city);
       setStraße(data.getCustomer.street);
       setEmail(data.getCustomer.email);
-      setBike(data.getOrdersByCustomer[0].bike);
-      setDate(data.getOrdersByCustomer[0].date);
-      setPrice(data.getOrdersByCustomer[0].price);
+      setOrders(data.getOrdersByCustomer);
     }
   }, [data]);
 
@@ -303,36 +312,23 @@ function ResponsiveDrawer(props) {
         <TableHead>
           <TableRow>
             <StyledTableCell> Bestellungen</StyledTableCell>
-            <StyledTableCell align="right">Inhalt</StyledTableCell>
+            <StyledTableCell align="right">Bike ID</StyledTableCell>
             <StyledTableCell align="right">EUR</StyledTableCell>
             <StyledTableCell align="right">Datum</StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {[rows[0]].map((row) => (
+          {rows.map((row) => (
             <TableRow
-              key={row.name}
+              key={row.bestellung}
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <StyledTableCell component="th" scope="row">
                 {row.bestellung}
               </StyledTableCell>
-              <StyledTableCell align="right">FDSFJ551</StyledTableCell>
-              <StyledTableCell align="right">{price}</StyledTableCell>
-              <StyledTableCell align="right">{date}</StyledTableCell>
-            </TableRow>
-          ))}
-          {rows.slice(1).map((row) => (
-            <TableRow
-              key={row.name}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <StyledTableCell component="th" scope="row">
-                {row.bestellung}
-              </StyledTableCell>
-              <StyledTableCell align="right"></StyledTableCell>
-              <StyledTableCell align="right"></StyledTableCell>
-              <StyledTableCell align="right"></StyledTableCell>
+              <StyledTableCell align="right">{row.bike}</StyledTableCell>
+              <StyledTableCell align="right">{row.price}</StyledTableCell>
+              <StyledTableCell align="right">{row.date}</StyledTableCell>
             </TableRow>
           ))}
         </TableBody>
