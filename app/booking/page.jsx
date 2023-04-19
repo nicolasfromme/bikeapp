@@ -714,18 +714,18 @@ function PaymentPage({ fields, selectedOptions, selectableBikes, customerId, fro
     const handleCheckoutClick = async () => {
 
         await handleAddOrder()
-        // const { error } = await stripe.redirectToCheckout({
-        //     lineItems:
-        //         [
-        //             { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: bookedBikesToPushIntern.length }
-        //         ],
-        //     mode: 'payment',
-        //     successUrl: 'http://localhost:3000/bookingConfirmation',
-        //     cancelUrl: 'https://example.com/cancel',
-        // });
-        // if (error) {
-        //     console.error(error);
-        // }
+        const { error } = await stripe.redirectToCheckout({
+             lineItems:
+                 [
+                     { price: 'price_1MwLYQB9hKGLIVbSISGoH8OB', quantity: bookedBikesToPushIntern.length }
+                 ],
+             mode: 'payment',
+             successUrl: 'http://localhost:3000/bookingConfirmation',
+             cancelUrl: 'https://example.com/cancel',
+        });
+        if (error) {
+             console.error(error);
+        }
     };
 
     return (

@@ -241,6 +241,7 @@ function StoreData({ storeId }) {
                 description
                 rented
             } getOrdersByStore(storeId: "${storeId}") {
+                id
                 customer
                 bike
                 date
@@ -275,6 +276,7 @@ function StoreData({ storeId }) {
     ]
 
     const columns_orders = [
+        { field: "id", headerName: "ID", width: 300},
         { field: "customer", headerName: "Customer", width: 300 },
         { field: "bike", headerName: "Bike", width: 200 },
         { field: "date", headerName: "Date", width: 200 },

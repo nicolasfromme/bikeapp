@@ -103,7 +103,7 @@ export const resolvers = {
     },
     getEmployeesByStore: async (_, args) => {
       await connectMongo();
-      const employees = await Employee.find({ storeId: args.storeId });
+      const employees = await Employee.find({ storeId: new ObjectId(args.storeId) });
       if (!employees) {
         return [];
       }
@@ -163,7 +163,7 @@ export const resolvers = {
 
     getBikesByStore: async (_, args) => {
       await connectMongo();
-      const bikes = await Bike.find({ bikeStore: args.storeId });
+      const bikes = await Bike.find({ bikeStore: new ObjectId(args.storeId) });
       if (!bikes) {
         return [];
       }
@@ -173,7 +173,7 @@ export const resolvers = {
     },
     getOrdersByStore: async (_, args) => {
       await connectMongo();
-      const orders = await Order.find({ bikeStore: args.storeId });
+      const orders = await Order.find({ bikeStore: new ObjectId(args.storeId) });
       if (!orders) {
         return [];
       }
@@ -184,7 +184,7 @@ export const resolvers = {
     getOrdersByCustomer: async (_, args) => {
       await connectMongo();
       console.log(args.customerId)
-      const orders = await Order.find({ customer: args.customerId });
+      const orders = await Order.find({ customer: new ObjectId(args.customerId) });
       if (!orders) {
         return [];
       }
