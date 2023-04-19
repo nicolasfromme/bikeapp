@@ -801,7 +801,8 @@ function HorizontalLinearStepper({ activeStep, setActiveStep, markers, listOfCit
                 bike: selectedOptions[key],
                 customer: customerId,
                 date: fromDate.toISOString(),
-                price: "20"
+                price: "20",
+                store: selectedStoreId,
             })
         }
         setbookedBikesToPush(bookedBikesToPushIntern);
